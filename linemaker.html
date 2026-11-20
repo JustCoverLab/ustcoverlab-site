@@ -227,7 +227,7 @@ function varDefs(s) {
     NBA: [ { id:'hB2b', kind:'toggle', label:'Home team on a back-to-back', hint:'−2 to home', pts:-2 },
            { id:'aB2b', kind:'toggle', label:'Away team on a back-to-back', hint:'+2 to home', pts:2 } ],
     CFB: [],
-    CBB: [ { id:'kp', kind:'text', label:'Another model\'s line (home team, optional)', hint:'e.g. KenPom. Blended 50/50 with ours, like the model does. Example: -6' } ]
+    CBB: [ { id:'kp', kind:'text', label:'Another model\'s line (home team, optional)', hint:'Blended 50/50 with ours, like the model does. Example: -6' } ]
   };
   return common.concat(extra[s] || []);
 }
@@ -270,7 +270,7 @@ function calc() {
   $('math').textContent = 'Home edge ' + hfa + ' + ' + h.power.toFixed(1) + ' − ' + a.power.toFixed(1) +
     (sit ? ' ' + (sit > 0 ? '+ ' : '− ') + Math.abs(sit) + ' (' + sitTxt.join(', ') + ')' : '') +
     (v.hAdj ? ' ' + (v.hAdj > 0 ? '+ ' : '− ') + Math.abs(v.hAdj) + ' home adj' : '') + (v.aAdj ? ' ' + (v.aAdj > 0 ? '− ' : '+ ') + Math.abs(v.aAdj) + ' away adj' : '') +
-    ' = ' + base.toFixed(1) + (kp !== null ? '; blended 50/50 with KenPom ' + (-kp).toFixed(1) + ' = ' + m.toFixed(1) : '') + '. Home line ' + fmtPt(line) + '.' +
+    ' = ' + base.toFixed(1) + (kp !== null ? '; blended 50/50 with the other model ' + (-kp).toFixed(1) + ' = ' + m.toFixed(1) : '') + '. Home line ' + fmtPt(line) + '.' +
     (h.note ? ' ' + disp(h.team) + ' rating already includes ' + h.note + '.' : '') + (a.note ? ' ' + disp(a.team) + ' rating already includes ' + a.note + '.' : '');
   bet(m, h, a);
 }
