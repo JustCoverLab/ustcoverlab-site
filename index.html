@@ -72,6 +72,19 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
 @media (max-width:760px){.hero,.grid2,.tools{grid-template-columns:1fr}.big .v{font-size:42px}.hide-sm{display:none}}
 #tTiles{grid-template-columns:repeat(4,1fr)} @media (max-width:760px){#tTiles{grid-template-columns:repeat(2,1fr)}}
 input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
+.abcd{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.abcd a{display:block;text-decoration:none;color:inherit;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.abcd a:hover{border-color:var(--g)}
+.abcd .L{font-size:22px;font-weight:800;color:var(--g);line-height:1}
+.abcd b{display:block;font-size:14px;margin:6px 0 2px}
+.abcd span{color:var(--muted);font-size:12.5px;line-height:1.4;display:block}
+.how4{display:grid;gap:14px}
+.how4 .it{display:grid;grid-template-columns:52px 1fr;gap:14px;align-items:start}
+.how4 .big{font-size:40px;font-weight:800;color:var(--g);line-height:1}
+.how4 h3{margin:2px 0 6px;font-size:17px}
+.how4 p{margin:0 0 6px;color:var(--muted);font-size:14.5px}
+.how4 .ex{font-size:13.5px;color:var(--ink);background:var(--card2);border-radius:8px;padding:8px 12px;margin-top:6px}
+@media (max-width:760px){.abcd{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -85,6 +98,12 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
   </nav>
 
   <section id="s-record">
+    <div class="abcd" aria-label="How we do it">
+      <a href="#how"><div class="L">A</div><b>Enjoy it</b><span>Bet games you'll watch, on a budget you set.</span></a>
+      <a href="#how"><div class="L">B</div><b>Give yourself a real shot</b><span>Bet the price, not the feeling.</span></a>
+      <a href="#how"><div class="L">C</div><b>Stay in the game</b><span>Small, steady bets. 1 unit = 1%.</span></a>
+      <a href="#how"><div class="L">D</div><b>Track what matters</b><span>If you don't track it, you don't know.</span></a>
+    </div>
     <div class="seg" role="tablist" aria-label="Bet type" id="seg">
       <button type="button" role="tab" data-c="overall">Overall</button><button type="button" role="tab" data-c="props">Props</button><button type="button" role="tab" data-c="aggressive">Aggressive</button><button type="button" role="tab" data-c="best">Best Bets</button>
     </div>
@@ -214,6 +233,24 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
   </section>
 
   <section id="s-how">
+    <div class="card">
+      <h2>How we do it: A, B, C, D</h2>
+      <p class="sub">Four habits anyone can copy. You don't need a model to use them, just a little discipline.</p>
+      <div class="how4">
+        <div class="it"><div class="big">A</div><div><h3>Enjoy it</h3>
+          <p>Betting should make the game more fun to watch, not make you miserable. Pick games you'll actually watch, and keep "just for fun" bets on a set monthly budget so a sweat never turns into stress.</p>
+          <div class="ex">How we do it: fun bets come from a fixed $300 a month at about $20 each. No 50-to-1 parlays, no chasing. Every big game gets a pregame card with the best prices and what to watch for.</div></div></div>
+        <div class="it"><div class="big">B</div><div><h3>Give yourself a real shot</h3>
+          <p>You can't control who wins. You can control the price you get. Bet when an app's price is better than the fair price, not because you have a feeling. Good bets still lose often; good prices win over time.</p>
+          <div class="ex" id="howB">How we do it: we only bet when an app beats Pinnacle's fair price by 3% or more.</div></div></div>
+        <div class="it"><div class="big">C</div><div><h3>Stay in the game</h3>
+          <p>Set a bankroll you could lose entirely without it mattering, and keep it separate. Make 1 unit about 1% of it. Small, steady bets survive the cold streaks that wipe out big ones, and every bettor hits cold streaks.</p>
+          <div class="ex" id="howC">How we do it: 1 unit = $50 on a $5,000 paper bankroll, a quarter of the Kelly formula, and never more than 3% on one bet.</div></div></div>
+        <div class="it"><div class="big">D</div><div><h3>Track what matters</h3>
+          <p>If you don't track it, you don't know. And if you don't know, you've already lost. Log every bet: the price, the stake, the result, and whether you beat the closing line. Your memory keeps the wins; the record keeps the truth. Money is hard to earn. Don't give it away.</p>
+          <div class="ex" id="howD">How we do it: every bet is timestamped before the game and stays on this site, win or lose.</div></div></div>
+      </div>
+    </div>
     <div class="card">
       <h2>How the model works</h2>
       <ol class="steps">
@@ -414,10 +451,20 @@ $('tPrev').onclick = function () { setDay(dayAdd(TD, -1)); };
 $('tNext').onclick = function () { setDay(dayAdd(TD, 1)); };
 $('tToday').onclick = function () { setDay(todayStr()); };
 var EXo = [];
+function howNums() {
+  try {
+    var st = R.cats.overall.parts[0], n = B.length + P.length + (EXo || []).length;
+    var bc = R.straight && R.straight.beat_close;
+    $('howB').textContent = 'How we do it: we only bet when an app beats Pinnacle\'s fair price by 3% or more.' + (bc ? ' So far ' + Math.round(bc * 100) + '% of our straight bets got a better number than the closing line, the best sign an edge is real.' : '');
+    var worst = null; Object.keys(R.days || {}).forEach(function (d) { var x = R.days[d].straight; if (x && x.w + x.l + x.p && (worst === null || x.profit < worst.p)) worst = { d: d, p: x.profit }; });
+    $('howC').textContent = 'How we do it: 1 unit = $50 on a $5,000 paper bankroll, a quarter of the Kelly formula, and never more than 3% on one bet.' + (worst && worst.p < 0 ? ' Our worst straight-bet day so far (' + fd(worst.d) + ') cost ' + money(worst.p) + ', about ' + Math.round(-worst.p / R.start * 100) + '% of the bankroll. A bad day, not a disaster.' : '');
+    $('howD').textContent = 'How we do it: all ' + n.toLocaleString() + ' bets are timestamped before the game and stay on this site, win or lose' + (st ? ', including the ' + st.l + ' straight-bet losses.' : '.');
+  } catch (e) {}
+}
 function get(f) { return fetch('data/' + f, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(f); return r.json(); }); }
 Promise.all([get('record.json'), get('bets.json'), get('props.json'), get('exotics.json').catch(function () { return []; })]).then(function (a) {
   R = a[0]; B = a[1]; P = a[2]; EXo = a[3];
-  record(); today();
+  record(); today(); howNums();
   opts('fSport', Array.from(new Set(B.map(function (x) { return x.sp; }))).sort()); bets();
   opts('pSport', Array.from(new Set(P.map(function (x) { return x.sp; }))).sort()); props();
 }).catch(function () { $('upd').textContent = 'Could not load the record. Try refreshing.'; });
