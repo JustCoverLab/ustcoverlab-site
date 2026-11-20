@@ -111,6 +111,7 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
 .rel.sub{border-left-color:var(--line)}
 .rel b{font-size:12px;color:var(--g)}
 .rel ul{margin:4px 0 0;padding-left:18px}
+.rt{font-size:12.5px;margin-top:4px}.rt th,.rt td{padding:5px 8px}
 </style>
 </head>
 <body>
@@ -509,15 +510,22 @@ function kt(k) { return '<span class="kt k-' + k.split(' ')[0] + '">' + (KN[k] |
 function tm(t) { if (!t) return ''; var h = +t.slice(0, 2), m = t.slice(3); return (h % 12 || 12) + ':' + m + (h < 12 ? ' AM' : ' PM'); }
 function relHtml(f) {
   var h = f.tag ? ' <span class="kt k-GAP">' + esc(f.tag) + '</span>' : '';
-  if (f.rel && f.rel.length) h += '<div class="rel"><b>↳ Plays on this game after the news</b><ul>' + f.rel.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul></div>';
-  else if (f.rel_note) h += '<div class="rel sub">↳ ' + esc(f.rel_note) + '</div>';
+  if (f.rel && f.rel.length) {
+    h += '<div class="rel"><b>↳ Bets the model made after the news (' + f.rel.length + ')</b><div class="scroll"><table class="rt"><thead><tr><th>Logged</th><th>Bet</th><th>App</th><th class="n">Our odds</th><th class="n">EV</th><th class="n">Closed at</th><th>Result</th></tr></thead><tbody>' +
+      f.rel.map(function (r) {
+        var cl = r.k === 'BET' ? (r.cl === null || r.cl === undefined ? '–' : odds(r.cl) + (r.od !== null && r.cl !== null ? (dec(r.od) > dec(r.cl) ? ' <span class="pos">✓ beat it</span>' : '') : '')) : '<span class="sub">props: not tracked yet</span>';
+        var res = r.r ? resCell(r.r) + (r.k === 'BET' && r.pf !== null && r.pf !== undefined ? ' <span class="' + cls(r.pf) + '">' + money(r.pf, true) + '</span>' : r.u !== null && r.u !== undefined ? ' <span class="' + cls(r.u) + '">' + ud(r.u, true) + '</span>' : '') : resCell(null);
+        return '<tr><td>' + (tm(r.t) || '–') + '</td><td><b>' + esc(r.x) + '</b>' + (r.k === 'PROP' ? ' <span class="sub" style="font-size:11px">prop</span>' : '') + '</td><td>' + esc(r.bk) + '</td><td class="n">' + odds(r.od) + '</td><td class="n pos">' + pct(r.e) + '</td><td class="n">' + cl + '</td><td>' + res + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  } else if (f.rel_note) h += '<div class="rel sub">↳ ' + esc(f.rel_note) + '</div>';
   return h;
 }
+function dec(o) { return o > 0 ? 1 + o / 100 : 1 + 100 / -o; }
 function feed() {
   var day = TD, L = FD.filter(function (f) { return f.d === day; }).sort(function (a, b) { return (b.t ? 1 : 0) - (a.t ? 1 : 0) || (b.t > a.t ? 1 : b.t < a.t ? -1 : 0); });
   var tl = L.filter(function (f) { return f.x.indexOf('props logged this day') < 0; }).slice(0, 40);
   if (!tl.length) tl = [{ k: 'RATINGS', sp: '', x: 'No new data logged for this day yet. The wire fills in as the model runs.', g: '' }];
-  $('tRun').innerHTML = tl.map(function (f) { return '<span class="it">' + kt(f.k) + (f.sp ? '<b style="color:var(--muted)">' + esc(f.sp) + '</b>' : '') + '<span>' + (f.g ? '<b style="font-size:13.5px;letter-spacing:0">' + esc(f.g) + '</b> · ' : '') + esc(f.x) + (f.tag ? ' <span class="kt k-GAP">' + esc(f.tag) + '</span>' : '') + (f.rel && f.rel.length ? ' <span style="color:var(--g)">↳ Play: ' + esc(f.rel[0]) + '</span>' : '') + '</span></span>'; }).join('');
+  $('tRun').innerHTML = tl.map(function (f) { return '<span class="it">' + kt(f.k) + (f.sp ? '<b style="color:var(--muted)">' + esc(f.sp) + '</b>' : '') + '<span>' + (f.g ? '<b style="font-size:13.5px;letter-spacing:0">' + esc(f.g) + '</b> · ' : '') + esc(f.x) + (f.tag ? ' <span class="kt k-GAP">' + esc(f.tag) + '</span>' : '') + (f.rel && f.rel.length ? ' <span style="color:var(--g)">↳ Model bet: ' + esc(f.rel[0].x) + ' ' + odds(f.rel[0].od) + ' (' + pct(f.rel[0].e) + ' EV)' + (f.rel.length > 1 ? ' +' + (f.rel.length - 1) + ' more' : '') + '</span>' : '') + '</span></span>'; }).join('');
   $('tRun').style.setProperty('--dur', Math.max(40, tl.length * 9) + 's');
   var have = {}; L.forEach(function (f) { have[f.k] = (have[f.k] || 0) + 1; });
   $('tChips').innerHTML = KG.filter(function (k) { return !k[0] || have[k[0]]; }).map(function (k) { return '<button type="button" data-k="' + k[0] + '" aria-pressed="' + (TK === k[0]) + '">' + k[1] + (k[0] ? ' ' + have[k[0]] : ' ' + L.length) + '</button>'; }).join('');
