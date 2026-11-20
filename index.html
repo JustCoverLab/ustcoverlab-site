@@ -70,6 +70,7 @@ footer{color:var(--faint);font-size:12px;text-align:center;line-height:1.7}
 button{font:inherit;font-size:13px;font-weight:600;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:7px 14px;cursor:pointer}
 button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--g);outline-offset:2px}
 @media (max-width:760px){.hero,.grid2,.tools{grid-template-columns:1fr}.big .v{font-size:42px}.hide-sm{display:none}}
+#tTiles{grid-template-columns:repeat(4,1fr)} @media (max-width:760px){#tTiles{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -79,7 +80,7 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
     <div class="upd" id="upd">Loading…</div>
   </header>
   <nav class="tabs" aria-label="Sections">
-    <a href="#record">The Record</a><a href="#bets">Every Bet</a><a href="#props">Props</a><a href="#lab">Lab Notes</a><a href="#tools">Tools</a><a href="#how">How It Works</a>
+    <a href="#record">The Record</a><a href="#today">Today</a><a href="#bets">Every Bet</a><a href="#props">Props</a><a href="#lab">Lab Notes</a><a href="#tools">Tools</a><a href="#how">How It Works</a>
   </nav>
 
   <section id="s-record">
@@ -122,6 +123,25 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
       <p class="sub">Side experiments, shown win or lose. Losing ideas stay on the board.</p>
       <table><thead><tr><th>Bet type</th><th class="n">Record</th><th class="n">Open</th><th class="n">Staked</th><th class="n">Profit</th><th class="n">ROI</th></tr></thead><tbody id="other"></tbody></table>
     </div>
+  </section>
+
+  <section id="s-today">
+    <div class="card">
+      <h2 id="tH">Today's bets</h2>
+      <p class="sub" id="tS"></p>
+      <div class="tiles" id="tTiles" style="margin-bottom:6px"></div>
+    </div>
+    <div class="card">
+      <h2>Straight bets</h2>
+      <p class="sub">Spreads, totals and moneylines with a 3%+ edge. <span class="res W" style="font-size:11px">Best Bet</span> marks the ones that also made the Best Bets list.</p>
+      <div class="scroll"><table><thead><tr><th>Pick</th><th class="hide-sm">Game</th><th>App</th><th class="n">Odds</th><th class="n">EV</th><th class="n">Stake</th><th>Result</th><th class="n">Profit</th></tr></thead><tbody id="tBets"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2>Player props</h2>
+      <p class="sub">Flat 1 unit each, sorted by edge.</p>
+      <div class="scroll"><table><thead><tr><th>Player</th><th>Prop</th><th>App</th><th class="n">Odds</th><th class="n">EV</th><th>Result</th><th class="n">Units</th></tr></thead><tbody id="tProps"></tbody></table></div>
+    </div>
+    <p class="sub" style="text-align:center">Paper bets only, logged by the model before the games. Prices move, so what you see at your app may differ. 21+ · 1-800-GAMBLER</p>
   </section>
 
   <section id="s-bets">
@@ -215,7 +235,7 @@ function fd(d) { if (!d) return ''; var p = d.split('-'); return Number(p[1]) + 
 function tile(k, v, s, c) { return '<div class="tile"><div class="k">' + k + '</div><div class="v ' + (c || '') + '">' + v + '</div><div class="s">' + (s || '') + '</div></div>'; }
 
 function route() {
-  var h = (location.hash || '#record').slice(1), ok = ['record', 'bets', 'props', 'lab', 'tools', 'how'];
+  var h = (location.hash || '#record').slice(1), ok = ['record', 'today', 'bets', 'props', 'lab', 'tools', 'how'];
   if (ok.indexOf(h) < 0) h = 'record';
   ok.forEach(function (k) { $('s-' + k).classList.toggle('on', k === h); });
   document.querySelectorAll('nav.tabs a').forEach(function (a) { if (a.getAttribute('href') === '#' + h) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
@@ -315,10 +335,33 @@ $('fSport').onchange = $('fRes').onchange = function () { betN = 60; bets(); };
 $('pSport').onchange = $('pRes').onchange = $('pQ').oninput = function () { propN = 60; props(); };
 $('betMore').onclick = function () { betN += 100; bets(); };
 $('propMore').onclick = function () { propN += 100; props(); };
+function todayStr() { try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); } catch (e) { return new Date().toISOString().slice(0, 10); } }
+function today() {
+  var t = todayStr(), all = B.map(function (x) { return x.d; }).concat(P.map(function (x) { return x.d; })).filter(Boolean).sort();
+  var day = all.indexOf(t) >= 0 ? t : all[all.length - 1], isT = day === t;
+  var tb = B.filter(function (x) { return x.d === day; }).sort(function (a, b) { return b.e - a.e; });
+  var tp = P.filter(function (x) { return x.d === day; }).sort(function (a, b) { return b.e - a.e; });
+  var dn = new Date(day + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+  $('tH').textContent = isT ? "Today's bets" : 'Latest bets';
+  $('tS').textContent = isT ? dn + '. Results fill in after the games are graded.' : 'Nothing logged yet today. Showing the most recent day: ' + dn + '.';
+  var g = tb.filter(function (x) { return x.r; }), pf = g.reduce(function (s, x) { return s + x.p; }, 0);
+  var gp = tp.filter(function (x) { return x.r; }), u = gp.reduce(function (s, x) { return s + (x.u || 0); }, 0);
+  var w = function (L) { return L.filter(function (x) { return x.r === 'W'; }).length + '–' + L.filter(function (x) { return x.r === 'L'; }).length; };
+  $('tTiles').innerHTML = tile('Straight bets', tb.length, tb.filter(function (x) { return x.b; }).length + ' Best Bets') +
+    tile('Props', tp.length, 'flat 1 unit each') +
+    tile('Straight result', g.length ? money(pf, true) : '–', g.length ? w(g) + ' graded' : 'not graded yet', cls(pf)) +
+    tile('Props result', gp.length ? (u > 0 ? '+' : u < 0 ? '−' : '') + Math.abs(u).toFixed(1) + 'u' : '–', gp.length ? w(gp) + ' graded' : 'not graded yet', cls(u));
+  $('tBets').innerHTML = tb.map(function (x) {
+    return '<tr><td><b>' + esc(x.pk) + '</b>' + (x.b ? ' <span class="res W" style="font-size:11px">Best Bet</span>' : '') + '<div class="upd">' + esc(x.sp) + ' · ' + esc(x.m) + '</div></td><td class="hide-sm">' + esc(x.ev) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td class="n">' + money(x.s) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.p) + '">' + (x.r ? money(x.p, true) : '–') + '</td></tr>';
+  }).join('') || '<tr><td colspan="8" class="sub">No straight bets cleared the bar' + (isT ? ' today' : '') + '. That happens: no edge, no bet.</td></tr>';
+  $('tProps').innerHTML = tp.map(function (x) {
+    return '<tr><td><b>' + esc(x.pl) + '</b><div class="upd">' + esc(x.sp) + ' · ' + esc(x.ev) + '</div></td><td>' + esc(x.pr) + ' ' + esc(x.sd) + ' ' + (x.ln === null ? '' : x.ln) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.u) + '">' + (x.u === null || x.u === undefined ? '–' : (x.u > 0 ? '+' : '') + x.u.toFixed(2)) + '</td></tr>';
+  }).join('') || '<tr><td colspan="7" class="sub">No props cleared the bar.</td></tr>';
+}
 function get(f) { return fetch('data/' + f, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(f); return r.json(); }); }
 Promise.all([get('record.json'), get('bets.json'), get('props.json')]).then(function (a) {
   R = a[0]; B = a[1]; P = a[2];
-  record();
+  record(); today();
   opts('fSport', Array.from(new Set(B.map(function (x) { return x.sp; }))).sort()); bets();
   opts('pSport', Array.from(new Set(P.map(function (x) { return x.sp; }))).sort()); props();
 }).catch(function () { $('upd').textContent = 'Could not load the record. Try refreshing.'; });
