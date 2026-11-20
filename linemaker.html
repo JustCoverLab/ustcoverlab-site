@@ -212,11 +212,13 @@ function num(v) { var n = Number(String(v).replace(/[^\d.+\-]/g, '')); return St
 
 // Game variables per sport. kind: toggle (adds pts to home margin when on) or step (team adjustment in points).
 function varDefs(s) {
+  var adjHint = { NFL: 'Injuries, QB change, news (+ = better)', CFB: 'Injuries, QB change, news (+ = better)',
+                  NBA: 'Injuries, rest, lineup news (+ = better)', CBB: 'Injuries, lineup news (+ = better)' }[s] || 'Injuries, news (+ = better)';
   var common = [
     { id:'neutral', kind:'toggle', label:'Neutral site', hint:'No home edge' },
     { id:'hfa', kind:'step', label:'Home edge (pts)', hint:'Model default for this sport', step:0.5, def: D[s].hfa },
-    { id:'hAdj', kind:'step', label:'Home team adjustment', hint:'Injuries, QB change, news (+ = better)', step:0.5, def:0 },
-    { id:'aAdj', kind:'step', label:'Away team adjustment', hint:'Injuries, QB change, news (+ = better)', step:0.5, def:0 }
+    { id:'hAdj', kind:'step', label:'Home team adjustment', hint:adjHint, step:0.5, def:0 },
+    { id:'aAdj', kind:'step', label:'Away team adjustment', hint:adjHint, step:0.5, def:0 }
   ];
   var extra = {
     NFL: [ { id:'hBye', kind:'toggle', label:'Home team off a bye', hint:'+0.7 (backtested)', pts:0.7 },
@@ -225,7 +227,7 @@ function varDefs(s) {
     NBA: [ { id:'hB2b', kind:'toggle', label:'Home team on a back-to-back', hint:'−2 to home', pts:-2 },
            { id:'aB2b', kind:'toggle', label:'Away team on a back-to-back', hint:'+2 to home', pts:2 } ],
     CFB: [],
-    CBB: [ { id:'kp', kind:'text', label:'KenPom line (home team)', hint:'Blended 50/50 like the model, e.g. -6' } ]
+    CBB: [ { id:'kp', kind:'text', label:'Another model\'s line (home team, optional)', hint:'e.g. KenPom. Blended 50/50 with ours, like the model does. Example: -6' } ]
   };
   return common.concat(extra[s] || []);
 }
