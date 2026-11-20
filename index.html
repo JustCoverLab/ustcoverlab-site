@@ -109,11 +109,11 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
     </div>
     <div class="card">
       <h2>How each bet type is defined</h2>
-      <p class="sub">Every bet starts the same way: we take Pinnacle's odds (the sharpest market in the world), strip out their built-in cut to get a fair price, and compare it to the apps people actually bet on. The bet types differ in which edges they take and how much they bet.</p>
+      <p class="sub">Every bet starts the same way: we take Pinnacle's odds (the sharpest market in the world), strip out their built-in cut to get a fair price, and compare it to the apps people actually bet on. The bet types differ in which edges they take and how much they bet. 1 unit = $50 (1% of the starting bankroll); see <a href="#how" style="color:var(--g)">Units &amp; bankroll management</a>.</p>
       <div style="display:grid;gap:12px">
         <div class="note"><h3>Overall</h3><p>Every model bet at standard size, all in one paper bankroll that started at $5,000: straight bets, player props (counted at $50 per unit, which is 1% of the bankroll) and the ratings gap bets. This is the honest "everything" number.</p></div>
         <div class="note"><h3>Straight bets</h3><p>Spreads, totals and moneylines where an app's price is at least 3% better than the fair price (4% if the bet is placed 8+ hours before the game). Sized with a quarter of the Kelly formula and never more than 3% of the bankroll on one bet. Part of Overall.</p></div>
-        <div class="note"><h3>Props</h3><p>Player props (points, rebounds, assists, threes, receiving yards, catches and so on) at real apps, with the same 3%+ edge rule against Pinnacle's fair price. NFL props are Unders only, because Overs lost money in testing. Graded at a flat 1 unit each so a +150 and a −150 count the same.</p></div>
+        <div class="note"><h3>Props</h3><p>Player props (points, rebounds, assists, threes, receiving yards, catches and so on) at real apps, with the same 3%+ edge rule against Pinnacle's fair price. NFL props are Unders only, because Overs lost money in testing. Graded at a flat 1 unit ($50) each so a +150 and a −150 count the same.</p></div>
         <div class="note y"><h3>Aggressive</h3><p>The same qualifying bets sized bigger, on a separate $5,000 paper bankroll: half Kelly (vs a quarter), up to 5% on one bet, 4% on one game and 30% of the bankroll open at once. It also takes props (quarter Kelly, max 1.5%) and teasers/parlays built only from legs with 3%+ edge. Bigger swings both ways: this is the "what if we pressed" test.</p></div>
         <div class="note"><h3>Best Bets</h3><p>The highest-quality subset, on its own $5,000 paper bankroll: edge between 2% and 10% (huge edges are often bad data), odds between −250 and +250, no fresh injury news, weather flags or unknown app limits, and at most 5 per day. Same sizing rules as straight bets.</p></div>
         <div class="note"><h3>Ratings gap bets</h3><p>Side tests of our own power ratings: when our line differs from the market by a set number of points (for example 5+ in college basketball), we log a paper bet. Shown in Overall and in "Everything else we've tried."</p></div>
@@ -151,7 +151,7 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
     </div>
     <div class="card">
       <h2>Player props</h2>
-      <p class="sub">Flat 1 unit each, sorted by edge. Aggressive shows the dollar result in that bankroll.</p>
+      <p class="sub">Flat 1 unit ($50) each, sorted by edge. Aggressive shows the dollar result in that bankroll.</p>
       <div class="scroll"><table><thead><tr><th>Player</th><th>Prop</th><th>App</th><th class="n">Odds</th><th class="n">EV</th><th>Result</th><th class="n">Units</th><th class="n hide-sm">Aggressive</th></tr></thead><tbody id="tProps"></tbody></table></div>
     </div>
     <div class="card" id="tExCard">
@@ -175,7 +175,7 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
   <section id="s-props">
     <div class="card">
       <h2>Props by sport and side</h2>
-      <p class="sub">Flat 1 unit each. NFL props are Unders only since Nov 18, because Overs lost.</p>
+      <p class="sub">Flat 1 unit ($50) each. NFL props are Unders only since Nov 18, because Overs lost.</p>
       <table><thead><tr><th>Group</th><th class="n">Record</th><th class="n">Units</th><th class="n">ROI</th></tr></thead><tbody id="propBy"></tbody></table>
     </div>
     <div class="card">
@@ -220,10 +220,22 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
         <li><b>Start from the sharpest price.</b> Pinnacle's odds are the best estimate of a game's true chances. We remove their built-in cut to get a fair price.</li>
         <li><b>Shop every app.</b> We compare that fair price to the odds at the apps regular people use.</li>
         <li><b>Only bet real edges.</b> A bet qualifies when an app's price is at least 3% better than fair.</li>
-        <li><b>Size bets small.</b> Stakes are a fraction of the Kelly formula, capped at 4% of the bankroll per game, so no single game can sink us.</li>
+        <li><b>Size bets small.</b> Stakes are a quarter of the Kelly formula and never more than 3% of the bankroll on one bet, so no single game can sink us. Details below.</li>
         <li><b>Grade the price, not just the result.</b> The real scorecard is closing-line value: did we get a better number than where the line closed? That says whether we're right long before win-loss does.</li>
         <li><b>Test everything in public.</b> New ideas get backtested, and the results get posted in Lab Notes, even when the idea fails.</li>
       </ol>
+    </div>
+    <div class="card" id="units">
+      <h2>Units &amp; bankroll management</h2>
+      <p class="sub">How much we bet matters as much as what we bet. This is the part most bettors skip.</p>
+      <div style="display:grid;gap:12px">
+        <div class="note"><h3>1 unit = $50</h3><p>One unit is 1% of the $5,000 starting bankroll, and it stays fixed at $50 even as the bankroll grows or shrinks. That way "+10u" means the same thing in week 1 and week 20. Props are always exactly 1 unit. Straight bets average about 0.7u, because most edges are small.</p></div>
+        <div class="note"><h3>Bet size follows the edge</h3><p>We size straight bets with the Kelly formula, which turns an edge and the odds into a bet size: bigger edge, bigger bet. Full Kelly swings too hard, and our edge estimates are never perfect, so we bet a quarter of what it says. Example: a 4% edge at −110 works out to about 1.1u ($55).</p></div>
+        <div class="note"><h3>Hard caps</h3><p>Never more than 3u (3%) on one straight bet. The Aggressive bankroll goes up to half Kelly, with at most 5% on one bet, 4% on one game and 30% of the bankroll riding at once. Those caps are the point of that test: how much extra swing do bigger bets buy?</p></div>
+        <div class="note y"><h3>Why so small?</h3><p>Even a real edge loses a lot. A good bet wins maybe 53–56% of the time, so losing streaks of 6 to 8 bets happen to everyone. At about 1% a bet, a bad week costs a few percent of the bankroll, not the bankroll.</p></div>
+        <div class="note"><h3>Separate bankrolls</h3><p>Overall, Aggressive and Best Bets each run on their own $5,000 paper bankroll, so a hot streak in one can't hide a cold streak in another.</p></div>
+        <div class="note"><h3>If you bet your own money</h3><p>Pick a bankroll you could lose entirely without it mattering, and keep it separate from everything else. Make 1 unit 1–2% of it. Don't raise your unit after a hot week, don't chase after a bad one, and resize at most once a month. A bankroll plan is what makes betting fun for the long haul instead of stressful.</p></div>
+      </div>
     </div>
     <div class="card">
       <h2>House rules</h2>
@@ -263,7 +275,7 @@ window.addEventListener('hashchange', route); route();
 var CAT = 'overall';
 var DEF = {
   overall: 'Every model bet at standard size in one $5,000 paper bankroll: straight bets, props ($50 per unit) and ratings gap bets.',
-  props: 'Player props with a 3%+ edge at real apps, graded at a flat 1 unit each.',
+  props: 'Player props with a 3%+ edge at real apps, graded at a flat 1 unit ($50) each.',
   aggressive: 'The same edges bet bigger (half Kelly) on a separate $5,000 paper bankroll, plus props and teasers/parlays.',
   best: 'The cleanest subset (2–10% edge, mid-range odds, no late news, max 5 a day) on its own $5,000 paper bankroll.'
 };
@@ -313,7 +325,7 @@ function showCat(k) {
   chart(c);
   var head = '<tr><th>Part</th><th class="n">Record</th><th class="n">Open</th><th class="n">Bet</th><th class="n">Profit</th><th class="n">ROI</th></tr>';
   if (k === 'props') {
-    $('partsH').textContent = 'Props by sport and side'; $('partsS').textContent = 'Flat 1 unit each. NFL props are Unders only since Nov 18.';
+    $('partsH').textContent = 'Props by sport and side'; $('partsS').textContent = 'Flat 1 unit ($50) each. NFL props are Unders only since Nov 18.';
     $('partsHead').innerHTML = '<tr><th>Group</th><th class="n">Record</th><th class="n">Units</th><th class="n">ROI</th></tr>';
     $('parts').innerHTML = c.by.map(function (x) { return '<tr><td>' + esc(x.k) + '</td><td class="n">' + x.w + '–' + x.l + '</td><td class="n ' + cls(x.units) + '">' + amt(x.units, 'u', true) + '</td><td class="n ' + cls(x.roi) + '">' + pct(x.roi) + '</td></tr>'; }).join('');
     $('partsCard').style.display = '';
@@ -376,7 +388,7 @@ function today() {
   var res = function (x, u) { return x.w + x.l + x.p ? amtS(x.profit, u) : (x.open ? 'not graded yet' : '–'); };
   var o = c('overall'), pr = c('props');
   $('tTiles').innerHTML = tile('Straight bets', tb.length, tb.filter(function (x) { return x.b; }).length + ' Best Bets') +
-    tile('Props', tp.length, 'flat 1 unit each') +
+    tile('Props', tp.length, '1 unit ($50) each') +
     tile('Overall result', res(o, '$'), o.w + o.l + o.p ? rec(o) + (o.open ? ' · ' + o.open + ' open' : '') : '', cls(o.profit)) +
     tile('Props result', res(pr, 'u'), pr.w + pr.l + pr.p ? rec(pr) : '', cls(pr.profit));
   var rows = [['Overall', 'overall', '$'], ['Straight bets', 'straight', '$'], ['Player props', 'props', 'u'], ['Best Bets', 'best', '$'], ['Aggressive', 'aggressive', '$'], ['Ratings gap bets', 'gap', '$']];
