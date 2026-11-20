@@ -428,7 +428,7 @@ function bets() {
   var sp = $('fSport').value, rs = $('fRes').value;
   var L = B.filter(function (x) { return (!sp || x.sp === sp) && (!rs || (rs === 'O' ? !x.r : x.r === rs)); }).slice().reverse();
   $('betRows').innerHTML = L.slice(0, betN).map(function (x) {
-    return '<tr><td>' + fd(x.d) + '</td><td><b>' + esc(x.pk) + '</b><div class="upd">' + esc(x.sp) + ' · ' + esc(x.m) + '</div></td><td class="hide-sm">' + esc(x.ev) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td class="n">' + money(x.s) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.p) + '">' + (x.r ? money(x.p, true) : '–') + '</td><td class="n hide-sm ' + cls(x.clv) + '">' + pct(x.clv) + '</td></tr>';
+    return '<tr><td>' + fd(x.d) + '</td><td><b>' + esc(x.pk) + '</b><div class="upd">' + esc(x.sp) + ' · ' + esc(x.m) + clpTxt(x) + '</div></td><td class="hide-sm">' + esc(x.ev) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td class="n">' + money(x.s) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.p) + '">' + (x.r ? money(x.p, true) : '–') + '</td><td class="n hide-sm ' + cls(x.clv) + '">' + pct(x.clv) + '</td></tr>';
   }).join('') || '<tr><td colspan="10" class="sub">No bets match.</td></tr>';
   $('betMore').style.display = L.length > betN ? '' : 'none';
 }
@@ -478,7 +478,7 @@ function today() {
   }).join('');
   var pc = function (r, v) { return r ? '<span class="' + cls(v) + '">' + money(v, true) + '</span>' : '–'; };
   $('tBets').innerHTML = tb.map(function (x) {
-    return '<tr><td><b>' + esc(x.pk) + '</b>' + (x.b ? ' <span class="res W" style="font-size:11px">Best Bet</span>' : '') + '<div class="upd">' + esc(x.sp) + ' · ' + esc(x.m) + '</div></td><td class="hide-sm">' + esc(x.ev) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td class="n">' + money(x.s) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.p) + '">' + (x.r ? money(x.p, true) : '–') + '</td><td class="n hide-sm">' + (x.b && x.bs ? pc(x.r, x.bp) : '–') + '</td><td class="n hide-sm">' + (x.ag ? pc(x.r, x.apf) : '–') + '</td></tr>';
+    return '<tr><td><b>' + esc(x.pk) + '</b>' + (x.b ? ' <span class="res W" style="font-size:11px">Best Bet</span>' : '') + '<div class="upd">' + esc(x.sp) + ' · ' + esc(x.m) + clpTxt(x) + '</div></td><td class="hide-sm">' + esc(x.ev) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td class="n">' + money(x.s) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.p) + '">' + (x.r ? money(x.p, true) : '–') + '</td><td class="n hide-sm">' + (x.b && x.bs ? pc(x.r, x.bp) : '–') + '</td><td class="n hide-sm">' + (x.ag ? pc(x.r, x.apf) : '–') + '</td></tr>';
   }).join('') || '<tr><td colspan="10" class="sub">No straight bets cleared the bar this day. That happens: no edge, no bet.</td></tr>';
   $('tProps').innerHTML = tp.map(function (x) {
     return '<tr><td><b>' + esc(x.pl) + '</b><div class="upd">' + esc(x.sp) + ' · ' + esc(x.ev) + '</div></td><td>' + esc(x.pr) + ' ' + esc(x.sd) + ' ' + (x.ln === null ? '' : x.ln) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.u) + '">' + (x.u === null || x.u === undefined ? '–' : uu(x.u, true, 2) + ' · ' + ud(x.u, true)) + '</td><td class="n hide-sm">' + (x.ag ? pc(x.r, x.apf) : '–') + '</td></tr>';
@@ -508,6 +508,12 @@ var KN = { INJURY: 'Injury', 'GAP ALERT': 'Gap alert', EDGE: 'Edge', BET: 'Model
 var KG = [['', 'All'], ['INJURY', 'Injuries'], ['GAP ALERT', 'Gap alerts'], ['EDGE', 'Edges'], ['BET', 'Model bets'], ['PROP', 'Props'], ['WEATHER', 'Weather'], ['OUR LINE', 'Our line'], ['RATINGS', 'Ratings']];
 function kt(k) { return '<span class="kt k-' + k.split(' ')[0] + '">' + (KN[k] || k).toUpperCase() + '</span>'; }
 function tm(t) { if (!t) return ''; var h = +t.slice(0, 2), m = t.slice(3); return (h % 12 || 12) + ':' + m + (h < 12 ? ' AM' : ' PM'); }
+function sgn(v) { return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v); }
+function clpTxt(x) {
+  if (x.clp === null || x.clp === undefined || x.clpt === null || x.clpt === undefined) return '';
+  var t = x.clp > 0 ? 'beat by ' + x.clp + ' pt' + (x.clp === 1 ? '' : 's') : x.clp < 0 ? 'lost ' + Math.abs(x.clp) + ' pt' + (x.clp === -1 ? '' : 's') : 'same number';
+  return ' · closed ' + (/^(Over|Under)/.test(x.pk || x.x || '') ? x.clpt : sgn(x.clpt)) + ' <span class="' + (x.clp > 0 ? 'pos' : x.clp < 0 ? 'neg' : '') + '">(' + t + ')</span>';
+}
 function relHtml(f) {
   var h = f.tag ? ' <span class="kt k-GAP">' + esc(f.tag) + '</span>' : '';
   if (f.rel && f.rel.length) {
@@ -515,7 +521,7 @@ function relHtml(f) {
       f.rel.map(function (r) {
         var cl = (r.cl === null || r.cl === undefined) ? (r.k === 'PROP' ? '<span class="sub">not captured</span>' : '–') : odds(r.cl) + (r.od !== null ? (dec(r.od) > dec(r.cl) ? ' <span class="pos">✓ beat it</span>' : ' <span class="neg">✗</span>') : '');
         var res = r.r ? resCell(r.r) + (r.k === 'BET' && r.pf !== null && r.pf !== undefined ? ' <span class="' + cls(r.pf) + '">' + money(r.pf, true) + '</span>' : r.u !== null && r.u !== undefined ? ' <span class="' + cls(r.u) + '">' + ud(r.u, true) + '</span>' : '') : resCell(null);
-        return '<tr><td>' + (tm(r.t) || '–') + '</td><td><b>' + esc(r.x) + '</b>' + (r.k === 'PROP' ? ' <span class="sub" style="font-size:11px">prop</span>' : '') + '</td><td>' + esc(r.bk) + '</td><td class="n">' + odds(r.od) + '</td><td class="n pos">' + pct(r.e) + '</td><td class="n">' + cl + '</td><td>' + res + '</td></tr>';
+        return '<tr><td>' + (tm(r.t) || '–') + '</td><td><b>' + esc(r.x) + '</b>' + (r.k === 'BET' && clpTxt(r) ? '<div class="upd">' + clpTxt(r).replace(/^ · /, '') + '</div>' : '') + (r.k === 'PROP' ? ' <span class="sub" style="font-size:11px">prop</span>' : '') + '</td><td>' + esc(r.bk) + '</td><td class="n">' + odds(r.od) + '</td><td class="n pos">' + pct(r.e) + '</td><td class="n">' + cl + '</td><td>' + res + '</td></tr>';
       }).join('') + '</tbody></table></div></div>';
   } else if (f.rel_note) h += '<div class="rel sub">↳ ' + esc(f.rel_note) + '</div>';
   return h;
