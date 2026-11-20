@@ -328,7 +328,7 @@ function chart(c) {
   var pad = (hi - lo) * 0.12 || (u === 'u' ? 2 : 100); lo -= pad; hi += pad;
   var X = function (i) { return L + i * (W - L - Rt) / Math.max(1, pts.length - 1); }, Y = function (v) { return T + (hi - v) / (hi - lo) * (H - T - Bt); };
   var step = Math.pow(10, Math.floor(Math.log10((hi - lo) / 4))), tick = Math.ceil((hi - lo) / 4 / step) * step, g = '';
-  for (var v = Math.ceil(lo / tick) * tick; v <= hi; v += tick) g += '<line x1="' + L + '" x2="' + (W - Rt) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#2b3039"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" fill="#9aa0aa" font-size="12" text-anchor="end">' + (u === 'u' ? (Math.round(v * 10) / 10) + 'u' : '$' + Math.round(v).toLocaleString()) + '</text>';
+  for (var v = Math.ceil(lo / tick) * tick; v <= hi; v += tick) g += '<line x1="' + L + '" x2="' + (W - Rt) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#2b3039"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" fill="#9aa0aa" font-size="12" text-anchor="end">' + (u === 'u' ? (Math.round(v * 10) / 10) + 'u' : money(Math.round(v) || 0)) + '</text>';
   g += '<line x1="' + L + '" x2="' + (W - Rt) + '" y1="' + Y(c.start) + '" y2="' + Y(c.start) + '" stroke="#6b7280" stroke-dasharray="4 4"/>';
   var every = Math.max(1, Math.ceil(pts.length / 8));
   pts.forEach(function (p, i) { if (i % every === 0 || i === pts.length - 1) g += '<text x="' + X(i) + '" y="' + (H - 12) + '" fill="#9aa0aa" font-size="12" text-anchor="middle">' + (p[0] === 'start' ? 'Start' : fd(p[0])) + '</text>'; });
@@ -355,7 +355,7 @@ function showCat(k) {
   if (u === 'u') { $('bigK').textContent = 'Profit at $50 per unit (1 unit per prop)'; $('bank').textContent = money(c.profit * UNIT, true); }
   else { $('bigK').textContent = 'Paper bankroll (started at ' + money(c.start) + ')'; $('bank').textContent = money(c.now); }
   $('bank').className = 'v ' + cls(c.profit);
-  $('bankS').innerHTML = '<span class="' + cls(c.profit) + '">' + (u === 'u' ? uu(c.profit, true) + ' units' : amt(c.profit, u, true)) + '</span> since ' + fd(R.first) + ' · ' + rec(c) + ' · ' + c.open + ' open';
+  $('bankS').innerHTML = '<span class="' + cls(c.profit) + '">' + (u === 'u' ? uu(c.profit, true).replace('u', '') + ' units' : amt(c.profit, u, true)) + '</span> since ' + fd(R.first) + ' · ' + rec(c) + ' · ' + c.open + ' open';
   $('tiles').innerHTML = tile('ROI', pct(c.roi), u === 'u' ? 'units won ÷ props bet' : 'profit ÷ amount bet', cls(c.roi)) +
     tile('Amount bet', u === 'u' ? c.staked.toFixed(0) + 'u · ' + money(c.staked * UNIT) : money(c.staked), 'on graded bets') +
     (c.beat_close !== null && c.beat_close !== undefined ? tile('Beat the closing line', plain(c.beat_close), 'of graded game bets') : tile('Bets graded', String(c.w + c.l + c.p), c.open + ' still open')) +
