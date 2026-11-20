@@ -511,9 +511,9 @@ function tm(t) { if (!t) return ''; var h = +t.slice(0, 2), m = t.slice(3); retu
 function relHtml(f) {
   var h = f.tag ? ' <span class="kt k-GAP">' + esc(f.tag) + '</span>' : '';
   if (f.rel && f.rel.length) {
-    h += '<div class="rel"><b>↳ Bets the model made after the news (' + f.rel.length + ')</b><div class="scroll"><table class="rt"><thead><tr><th>Logged</th><th>Bet</th><th>App</th><th class="n">Our odds</th><th class="n">EV</th><th class="n">Closed at</th><th>Result</th></tr></thead><tbody>' +
+    h += '<div class="rel"><b>↳ Bets the model made after the news (' + f.rel.length + ')</b><div class="scroll"><table class="rt"><thead><tr><th>Logged</th><th>Bet</th><th>App</th><th class="n">Our odds</th><th class="n">EV</th><th class="n" title="Pinnacle no-vig price just before the game">Closed at</th><th>Result</th></tr></thead><tbody>' +
       f.rel.map(function (r) {
-        var cl = r.k === 'BET' ? (r.cl === null || r.cl === undefined ? '–' : odds(r.cl) + (r.od !== null && r.cl !== null ? (dec(r.od) > dec(r.cl) ? ' <span class="pos">✓ beat it</span>' : '') : '')) : '<span class="sub">props: not tracked yet</span>';
+        var cl = (r.cl === null || r.cl === undefined) ? (r.k === 'PROP' ? '<span class="sub">not captured</span>' : '–') : odds(r.cl) + (r.od !== null ? (dec(r.od) > dec(r.cl) ? ' <span class="pos">✓ beat it</span>' : ' <span class="neg">✗</span>') : '');
         var res = r.r ? resCell(r.r) + (r.k === 'BET' && r.pf !== null && r.pf !== undefined ? ' <span class="' + cls(r.pf) + '">' + money(r.pf, true) + '</span>' : r.u !== null && r.u !== undefined ? ' <span class="' + cls(r.u) + '">' + ud(r.u, true) + '</span>' : '') : resCell(null);
         return '<tr><td>' + (tm(r.t) || '–') + '</td><td><b>' + esc(r.x) + '</b>' + (r.k === 'PROP' ? ' <span class="sub" style="font-size:11px">prop</span>' : '') + '</td><td>' + esc(r.bk) + '</td><td class="n">' + odds(r.od) + '</td><td class="n pos">' + pct(r.e) + '</td><td class="n">' + cl + '</td><td>' + res + '</td></tr>';
       }).join('') + '</tbody></table></div></div>';
