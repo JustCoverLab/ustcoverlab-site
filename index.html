@@ -71,6 +71,7 @@ button{font:inherit;font-size:13px;font-weight:600;color:var(--ink);background:v
 button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--g);outline-offset:2px}
 @media (max-width:760px){.hero,.grid2,.tools{grid-template-columns:1fr}.big .v{font-size:42px}.hide-sm{display:none}}
 #tTiles{grid-template-columns:repeat(4,1fr)} @media (max-width:760px){#tTiles{grid-template-columns:repeat(2,1fr)}}
+input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
@@ -127,19 +128,36 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
 
   <section id="s-today">
     <div class="card">
-      <h2 id="tH">Today's bets</h2>
-      <p class="sub" id="tS"></p>
-      <div class="tiles" id="tTiles" style="margin-bottom:6px"></div>
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px">
+        <div><h2 id="tH" style="margin:0">Today's bets</h2><p class="sub" id="tS" style="margin:4px 0 0"></p></div>
+        <div class="filters" style="margin:0;align-items:center">
+          <button type="button" id="tPrev" aria-label="Previous day">◀</button>
+          <input type="date" id="tDate" aria-label="Pick a date">
+          <button type="button" id="tNext" aria-label="Next day">▶</button>
+          <button type="button" id="tToday">Today</button>
+        </div>
+      </div>
+      <div class="tiles" id="tTiles" style="margin-top:14px"></div>
+    </div>
+    <div class="card">
+      <h2>Results by category</h2>
+      <p class="sub">How the day went in each bet type. Same definitions as The Record.</p>
+      <table><thead><tr><th>Category</th><th class="n">Record</th><th class="n">Open</th><th class="n">Staked</th><th class="n">Result</th></tr></thead><tbody id="tCats"></tbody></table>
     </div>
     <div class="card">
       <h2>Straight bets</h2>
-      <p class="sub">Spreads, totals and moneylines with a 3%+ edge. <span class="res W" style="font-size:11px">Best Bet</span> marks the ones that also made the Best Bets list.</p>
-      <div class="scroll"><table><thead><tr><th>Pick</th><th class="hide-sm">Game</th><th>App</th><th class="n">Odds</th><th class="n">EV</th><th class="n">Stake</th><th>Result</th><th class="n">Profit</th></tr></thead><tbody id="tBets"></tbody></table></div>
+      <p class="sub">Spreads, totals and moneylines with a 3%+ edge. <span class="res W" style="font-size:11px">Best Bet</span> marks the ones that also made the Best Bets list. The last two columns show the same bet's result in the Best Bets and Aggressive bankrolls.</p>
+      <div class="scroll"><table><thead><tr><th>Pick</th><th class="hide-sm">Game</th><th>App</th><th class="n">Odds</th><th class="n">EV</th><th class="n">Stake</th><th>Result</th><th class="n">Profit</th><th class="n hide-sm">Best Bets</th><th class="n hide-sm">Aggressive</th></tr></thead><tbody id="tBets"></tbody></table></div>
     </div>
     <div class="card">
       <h2>Player props</h2>
-      <p class="sub">Flat 1 unit each, sorted by edge.</p>
-      <div class="scroll"><table><thead><tr><th>Player</th><th>Prop</th><th>App</th><th class="n">Odds</th><th class="n">EV</th><th>Result</th><th class="n">Units</th></tr></thead><tbody id="tProps"></tbody></table></div>
+      <p class="sub">Flat 1 unit each, sorted by edge. Aggressive shows the dollar result in that bankroll.</p>
+      <div class="scroll"><table><thead><tr><th>Player</th><th>Prop</th><th>App</th><th class="n">Odds</th><th class="n">EV</th><th>Result</th><th class="n">Units</th><th class="n hide-sm">Aggressive</th></tr></thead><tbody id="tProps"></tbody></table></div>
+    </div>
+    <div class="card" id="tExCard">
+      <h2>Teasers &amp; parlays</h2>
+      <p class="sub">Aggressive bankroll only. Built from legs that each had a 3%+ edge.</p>
+      <div class="scroll"><table><thead><tr><th>Bet</th><th>Legs</th><th class="n">Odds</th><th class="n">EV</th><th class="n">Stake</th><th>Result</th><th class="n">Profit</th></tr></thead><tbody id="tEx"></tbody></table></div>
     </div>
     <p class="sub" style="text-align:center">Paper bets only, logged by the model before the games. Prices move, so what you see at your app may differ. 21+ · 1-800-GAMBLER</p>
   </section>
@@ -336,31 +354,57 @@ $('pSport').onchange = $('pRes').onchange = $('pQ').oninput = function () { prop
 $('betMore').onclick = function () { betN += 100; bets(); };
 $('propMore').onclick = function () { propN += 100; props(); };
 function todayStr() { try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); } catch (e) { return new Date().toISOString().slice(0, 10); } }
+var TD = null;
+function dayAdd(d, n) { var x = new Date(d + 'T12:00:00'); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); }
+function allDays() { return Object.keys(R.days || {}).concat(B.map(function (x) { return x.d; }), P.map(function (x) { return x.d; })).filter(Boolean).sort(); }
+function setDay(d) { TD = d; $('tDate').value = d; today(); }
+function amtS(v, u) { return u === 'u' ? (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1) + 'u' : money(v, true); }
 function today() {
-  var t = todayStr(), all = B.map(function (x) { return x.d; }).concat(P.map(function (x) { return x.d; })).filter(Boolean).sort();
-  var day = all.indexOf(t) >= 0 ? t : all[all.length - 1], isT = day === t;
+  var t = todayStr(), ds = allDays(), first = ds[0] || t;
+  if (!TD) TD = ds.indexOf(t) >= 0 ? t : (ds.filter(function (d) { return d <= t; }).pop() || t);
+  var day = TD, isT = day === t;
+  $('tDate').min = first; $('tDate').max = t > ds[ds.length - 1] ? t : ds[ds.length - 1]; $('tDate').value = day;
+  $('tPrev').disabled = day <= first; $('tNext').disabled = day >= $('tDate').max; $('tToday').disabled = isT;
   var tb = B.filter(function (x) { return x.d === day; }).sort(function (a, b) { return b.e - a.e; });
   var tp = P.filter(function (x) { return x.d === day; }).sort(function (a, b) { return b.e - a.e; });
-  var dn = new Date(day + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-  $('tH').textContent = isT ? "Today's bets" : 'Latest bets';
-  $('tS').textContent = isT ? dn + '. Results fill in after the games are graded.' : 'Nothing logged yet today. Showing the most recent day: ' + dn + '.';
-  var g = tb.filter(function (x) { return x.r; }), pf = g.reduce(function (s, x) { return s + x.p; }, 0);
-  var gp = tp.filter(function (x) { return x.r; }), u = gp.reduce(function (s, x) { return s + (x.u || 0); }, 0);
-  var w = function (L) { return L.filter(function (x) { return x.r === 'W'; }).length + '–' + L.filter(function (x) { return x.r === 'L'; }).length; };
+  var te = (EXo || []).filter(function (x) { return x.d === day; });
+  var dn = new Date(day + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+  $('tH').textContent = isT ? "Today's bets" : 'Bets for ' + dn.replace(/, \d{4}$/, '');
+  $('tS').textContent = isT ? dn + '. Results fill in after the games are graded.' : dn + '. Pick any date since ' + fd(first) + ' to see how it went.';
+  var D = (R.days || {})[day] || {};
+  var c = function (k) { return D[k] || { w: 0, l: 0, p: 0, open: 0, staked: 0, profit: 0 }; };
+  var res = function (x, u) { return x.w + x.l + x.p ? amtS(x.profit, u) : (x.open ? 'not graded yet' : '–'); };
+  var o = c('overall'), pr = c('props');
   $('tTiles').innerHTML = tile('Straight bets', tb.length, tb.filter(function (x) { return x.b; }).length + ' Best Bets') +
     tile('Props', tp.length, 'flat 1 unit each') +
-    tile('Straight result', g.length ? money(pf, true) : '–', g.length ? w(g) + ' graded' : 'not graded yet', cls(pf)) +
-    tile('Props result', gp.length ? (u > 0 ? '+' : u < 0 ? '−' : '') + Math.abs(u).toFixed(1) + 'u' : '–', gp.length ? w(gp) + ' graded' : 'not graded yet', cls(u));
+    tile('Overall result', res(o, '$'), o.w + o.l + o.p ? rec(o) + (o.open ? ' · ' + o.open + ' open' : '') : '', cls(o.profit)) +
+    tile('Props result', res(pr, 'u'), pr.w + pr.l + pr.p ? rec(pr) : '', cls(pr.profit));
+  var rows = [['Overall', 'overall', '$'], ['Straight bets', 'straight', '$'], ['Player props', 'props', 'u'], ['Best Bets', 'best', '$'], ['Aggressive', 'aggressive', '$'], ['Ratings gap bets', 'gap', '$']];
+  $('tCats').innerHTML = rows.map(function (r) {
+    var x = c(r[1]), g = x.w + x.l + x.p;
+    if (!g && !x.open && r[1] !== 'overall') return '<tr><td>' + r[0] + '</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n sub">no bets</td></tr>';
+    return '<tr><td>' + (r[1] === 'overall' ? '<b>' + r[0] + '</b>' : r[0]) + '</td><td class="n">' + (g ? rec(x) : '–') + '</td><td class="n">' + (x.open || '–') + '</td><td class="n">' + (g ? (r[2] === 'u' ? x.staked + 'u' : money(x.staked)) : '–') + '</td><td class="n ' + cls(x.profit) + '">' + res(x, r[2]) + '</td></tr>';
+  }).join('');
+  var pc = function (r, v) { return r ? '<span class="' + cls(v) + '">' + money(v, true) + '</span>' : '–'; };
   $('tBets').innerHTML = tb.map(function (x) {
-    return '<tr><td><b>' + esc(x.pk) + '</b>' + (x.b ? ' <span class="res W" style="font-size:11px">Best Bet</span>' : '') + '<div class="upd">' + esc(x.sp) + ' · ' + esc(x.m) + '</div></td><td class="hide-sm">' + esc(x.ev) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td class="n">' + money(x.s) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.p) + '">' + (x.r ? money(x.p, true) : '–') + '</td></tr>';
-  }).join('') || '<tr><td colspan="8" class="sub">No straight bets cleared the bar' + (isT ? ' today' : '') + '. That happens: no edge, no bet.</td></tr>';
+    return '<tr><td><b>' + esc(x.pk) + '</b>' + (x.b ? ' <span class="res W" style="font-size:11px">Best Bet</span>' : '') + '<div class="upd">' + esc(x.sp) + ' · ' + esc(x.m) + '</div></td><td class="hide-sm">' + esc(x.ev) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td class="n">' + money(x.s) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.p) + '">' + (x.r ? money(x.p, true) : '–') + '</td><td class="n hide-sm">' + (x.b && x.bs ? pc(x.r, x.bp) : '–') + '</td><td class="n hide-sm">' + (x.ag ? pc(x.r, x.apf) : '–') + '</td></tr>';
+  }).join('') || '<tr><td colspan="10" class="sub">No straight bets cleared the bar this day. That happens: no edge, no bet.</td></tr>';
   $('tProps').innerHTML = tp.map(function (x) {
-    return '<tr><td><b>' + esc(x.pl) + '</b><div class="upd">' + esc(x.sp) + ' · ' + esc(x.ev) + '</div></td><td>' + esc(x.pr) + ' ' + esc(x.sd) + ' ' + (x.ln === null ? '' : x.ln) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.u) + '">' + (x.u === null || x.u === undefined ? '–' : (x.u > 0 ? '+' : '') + x.u.toFixed(2)) + '</td></tr>';
-  }).join('') || '<tr><td colspan="7" class="sub">No props cleared the bar.</td></tr>';
+    return '<tr><td><b>' + esc(x.pl) + '</b><div class="upd">' + esc(x.sp) + ' · ' + esc(x.ev) + '</div></td><td>' + esc(x.pr) + ' ' + esc(x.sd) + ' ' + (x.ln === null ? '' : x.ln) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.u) + '">' + (x.u === null || x.u === undefined ? '–' : (x.u > 0 ? '+' : '') + x.u.toFixed(2)) + '</td><td class="n hide-sm">' + (x.ag ? pc(x.r, x.apf) : '–') + '</td></tr>';
+  }).join('') || '<tr><td colspan="8" class="sub">No props cleared the bar this day.</td></tr>';
+  $('tExCard').style.display = te.length ? '' : 'none';
+  $('tEx').innerHTML = te.map(function (x) {
+    return '<tr><td><b>' + esc(x.t) + '</b></td><td style="white-space:pre-line;font-size:13px">' + esc(x.legs) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td class="n">' + money(x.s) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.p) + '">' + (x.r ? money(x.p, true) : '–') + '</td></tr>';
+  }).join('');
 }
+$('tDate').onchange = function () { if ($('tDate').value) setDay($('tDate').value); };
+$('tPrev').onclick = function () { setDay(dayAdd(TD, -1)); };
+$('tNext').onclick = function () { setDay(dayAdd(TD, 1)); };
+$('tToday').onclick = function () { setDay(todayStr()); };
+var EXo = [];
 function get(f) { return fetch('data/' + f, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(f); return r.json(); }); }
-Promise.all([get('record.json'), get('bets.json'), get('props.json')]).then(function (a) {
-  R = a[0]; B = a[1]; P = a[2];
+Promise.all([get('record.json'), get('bets.json'), get('props.json'), get('exotics.json').catch(function () { return []; })]).then(function (a) {
+  R = a[0]; B = a[1]; P = a[2]; EXo = a[3];
   record(); today();
   opts('fSport', Array.from(new Set(B.map(function (x) { return x.sp; }))).sort()); bets();
   opts('pSport', Array.from(new Set(P.map(function (x) { return x.sp; }))).sort()); props();
