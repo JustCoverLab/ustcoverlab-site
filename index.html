@@ -316,7 +316,10 @@ var DEF = {
   aggressive: 'The same edges bet bigger (half Kelly) on a separate $5,000 paper bankroll, plus props and teasers/parlays.',
   best: 'The cleanest subset (2–10% edge, mid-range odds, no late news, max 5 a day) on its own $5,000 paper bankroll.'
 };
-function amt(v, u, sign) { return u === 'u' ? ((v > 0 && sign ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1) + 'u') : money(v, sign); }
+var UNIT = 50;
+function uu(v, sign, d) { return (v > 0 && sign ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(d === undefined ? 1 : d) + 'u'; }
+function ud(v, sign) { return money(v * UNIT, sign); }
+function amt(v, u, sign) { return u === 'u' ? uu(v, sign) + ' · ' + ud(v, sign) : money(v, sign); }
 function chart(c) {
   var S = c.series, u = c.unit; if (!S.length) { $('chart').innerHTML = '<p class="sub">No graded bets yet.</p>'; return; }
   var pts = [['start', c.start]].concat(S.map(function (s) { return [s[0], s[2]]; }));
@@ -349,17 +352,17 @@ function showCat(k) {
   CAT = k; var c = R.cats[k], u = c.unit;
   [].forEach.call($('seg').children, function (b) { b.setAttribute('aria-selected', b.dataset.c === k ? 'true' : 'false'); });
   $('catDef').textContent = DEF[k];
-  if (u === 'u') { $('bigK').textContent = 'Units won (flat 1 unit per prop)'; $('bank').textContent = amt(c.profit, 'u', true); }
+  if (u === 'u') { $('bigK').textContent = 'Profit at $50 per unit (1 unit per prop)'; $('bank').textContent = money(c.profit * UNIT, true); }
   else { $('bigK').textContent = 'Paper bankroll (started at ' + money(c.start) + ')'; $('bank').textContent = money(c.now); }
   $('bank').className = 'v ' + cls(c.profit);
-  $('bankS').innerHTML = '<span class="' + cls(c.profit) + '">' + amt(c.profit, u, true) + '</span> since ' + fd(R.first) + ' · ' + rec(c) + ' · ' + c.open + ' open';
+  $('bankS').innerHTML = '<span class="' + cls(c.profit) + '">' + (u === 'u' ? uu(c.profit, true) + ' units' : amt(c.profit, u, true)) + '</span> since ' + fd(R.first) + ' · ' + rec(c) + ' · ' + c.open + ' open';
   $('tiles').innerHTML = tile('ROI', pct(c.roi), u === 'u' ? 'units won ÷ props bet' : 'profit ÷ amount bet', cls(c.roi)) +
-    tile('Amount bet', u === 'u' ? c.staked.toFixed(0) + 'u' : money(c.staked), 'on graded bets') +
+    tile('Amount bet', u === 'u' ? c.staked.toFixed(0) + 'u · ' + money(c.staked * UNIT) : money(c.staked), 'on graded bets') +
     (c.beat_close !== null && c.beat_close !== undefined ? tile('Beat the closing line', plain(c.beat_close), 'of graded game bets') : tile('Bets graded', String(c.w + c.l + c.p), c.open + ' still open')) +
     tile('Avg edge at bet', pct(c.avg_ev), 'vs the fair price');
-  $('chartH').textContent = u === 'u' ? 'Running total (units)' : 'Running total';
-  $('chartS').textContent = u === 'u' ? 'Units won after each day of graded props.' : 'Paper bankroll after each day of graded bets. Every bet is logged with a timestamp before the game starts.';
-  chart(c);
+  $('chartH').textContent = 'Running total';
+  $('chartS').textContent = u === 'u' ? 'Profit after each day of graded props, at $50 per unit.' : 'Paper bankroll after each day of graded bets. Every bet is logged with a timestamp before the game starts.';
+  chart(u === 'u' ? { unit: '$', start: 0, series: c.series.map(function (x) { return [x[0], x[1] * UNIT, x[2] * UNIT]; }) } : c);
   var head = '<tr><th>Part</th><th class="n">Record</th><th class="n">Open</th><th class="n">Bet</th><th class="n">Profit</th><th class="n">ROI</th></tr>';
   if (k === 'props') {
     $('partsH').textContent = 'Props by sport and side'; $('partsS').textContent = 'Flat 1 unit ($50) each. NFL props are Unders only since Nov 18.';
@@ -376,7 +379,7 @@ function showCat(k) {
 function record() {
   $('upd').textContent = 'Updated ' + R.updated;
   $('other').innerHTML = R.other.map(function (o) { return '<tr><td>' + esc(o.name) + '</td><td class="n">' + (o.w + o.l + o.p ? rec(o) : '–') + '</td><td class="n">' + o.open + '</td><td class="n">' + (o.staked ? money(o.staked) : '–') + '</td><td class="n ' + cls(o.profit) + '">' + (o.w + o.l + o.p ? money(o.profit, true) : 'not graded yet') + '</td><td class="n ' + cls(o.roi) + '">' + (o.staked ? pct(o.roi) : '–') + '</td></tr>'; }).join('');
-  $('propBy').innerHTML = R.props.by.map(function (x) { return '<tr><td>' + esc(x.k) + '</td><td class="n">' + x.w + '–' + x.l + '</td><td class="n ' + cls(x.units) + '">' + (x.units > 0 ? '+' : '') + x.units.toFixed(1) + 'u</td><td class="n ' + cls(x.roi) + '">' + pct(x.roi) + '</td></tr>'; }).join('');
+  $('propBy').innerHTML = R.props.by.map(function (x) { return '<tr><td>' + esc(x.k) + '</td><td class="n">' + x.w + '–' + x.l + '</td><td class="n ' + cls(x.units) + '">' + amt(x.units, 'u', true) + '</td><td class="n ' + cls(x.roi) + '">' + pct(x.roi) + '</td></tr>'; }).join('');
   [].forEach.call($('seg').children, function (b) { b.onclick = function () { showCat(b.dataset.c); }; });
   showCat(CAT);
 }
@@ -394,7 +397,7 @@ function props() {
   var sp = $('pSport').value, rs = $('pRes').value, q = $('pQ').value.trim().toLowerCase();
   var L = P.filter(function (x) { return (!sp || x.sp === sp) && (!rs || (rs === 'O' ? !x.r : x.r === rs)) && (!q || String(x.pl).toLowerCase().indexOf(q) >= 0); }).slice().reverse();
   $('propRows').innerHTML = L.slice(0, propN).map(function (x) {
-    return '<tr><td>' + fd(x.d) + '</td><td><b>' + esc(x.pl) + '</b><div class="upd">' + esc(x.sp) + ' · ' + esc(x.ev) + '</div></td><td>' + esc(x.pr) + ' ' + esc(x.sd) + ' ' + (x.ln === null ? '' : x.ln) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td class="n">' + (x.st === null || x.st === undefined ? '–' : x.st) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.u) + '">' + (x.u === null || x.u === undefined ? '–' : (x.u > 0 ? '+' : '') + x.u.toFixed(2)) + '</td></tr>';
+    return '<tr><td>' + fd(x.d) + '</td><td><b>' + esc(x.pl) + '</b><div class="upd">' + esc(x.sp) + ' · ' + esc(x.ev) + '</div></td><td>' + esc(x.pr) + ' ' + esc(x.sd) + ' ' + (x.ln === null ? '' : x.ln) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td class="n">' + (x.st === null || x.st === undefined ? '–' : x.st) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.u) + '">' + (x.u === null || x.u === undefined ? '–' : uu(x.u, true, 2) + ' · ' + ud(x.u, true)) + '</td></tr>';
   }).join('') || '<tr><td colspan="9" class="sub">No props match.</td></tr>';
   $('propMore').style.display = L.length > propN ? '' : 'none';
 }
@@ -407,7 +410,7 @@ var TD = null;
 function dayAdd(d, n) { var x = new Date(d + 'T12:00:00'); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); }
 function allDays() { return Object.keys(R.days || {}).concat(B.map(function (x) { return x.d; }), P.map(function (x) { return x.d; })).filter(Boolean).sort(); }
 function setDay(d) { TD = d; $('tDate').value = d; today(); }
-function amtS(v, u) { return u === 'u' ? (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1) + 'u' : money(v, true); }
+function amtS(v, u) { return u === 'u' ? amt(v, 'u', true) : money(v, true); }
 function today() {
   var t = todayStr(), ds = allDays(), first = ds[0] || t;
   if (!TD) TD = ds.indexOf(t) >= 0 ? t : (ds.filter(function (d) { return d <= t; }).pop() || t);
@@ -432,14 +435,14 @@ function today() {
   $('tCats').innerHTML = rows.map(function (r) {
     var x = c(r[1]), g = x.w + x.l + x.p;
     if (!g && !x.open && r[1] !== 'overall') return '<tr><td>' + r[0] + '</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n sub">no bets</td></tr>';
-    return '<tr><td>' + (r[1] === 'overall' ? '<b>' + r[0] + '</b>' : r[0]) + '</td><td class="n">' + (g ? rec(x) : '–') + '</td><td class="n">' + (x.open || '–') + '</td><td class="n">' + (g ? (r[2] === 'u' ? x.staked + 'u' : money(x.staked)) : '–') + '</td><td class="n ' + cls(x.profit) + '">' + res(x, r[2]) + '</td></tr>';
+    return '<tr><td>' + (r[1] === 'overall' ? '<b>' + r[0] + '</b>' : r[0]) + '</td><td class="n">' + (g ? rec(x) : '–') + '</td><td class="n">' + (x.open || '–') + '</td><td class="n">' + (g ? (r[2] === 'u' ? x.staked + 'u · ' + money(x.staked * UNIT) : money(x.staked)) : '–') + '</td><td class="n ' + cls(x.profit) + '">' + res(x, r[2]) + '</td></tr>';
   }).join('');
   var pc = function (r, v) { return r ? '<span class="' + cls(v) + '">' + money(v, true) + '</span>' : '–'; };
   $('tBets').innerHTML = tb.map(function (x) {
     return '<tr><td><b>' + esc(x.pk) + '</b>' + (x.b ? ' <span class="res W" style="font-size:11px">Best Bet</span>' : '') + '<div class="upd">' + esc(x.sp) + ' · ' + esc(x.m) + '</div></td><td class="hide-sm">' + esc(x.ev) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td class="n">' + money(x.s) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.p) + '">' + (x.r ? money(x.p, true) : '–') + '</td><td class="n hide-sm">' + (x.b && x.bs ? pc(x.r, x.bp) : '–') + '</td><td class="n hide-sm">' + (x.ag ? pc(x.r, x.apf) : '–') + '</td></tr>';
   }).join('') || '<tr><td colspan="10" class="sub">No straight bets cleared the bar this day. That happens: no edge, no bet.</td></tr>';
   $('tProps').innerHTML = tp.map(function (x) {
-    return '<tr><td><b>' + esc(x.pl) + '</b><div class="upd">' + esc(x.sp) + ' · ' + esc(x.ev) + '</div></td><td>' + esc(x.pr) + ' ' + esc(x.sd) + ' ' + (x.ln === null ? '' : x.ln) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.u) + '">' + (x.u === null || x.u === undefined ? '–' : (x.u > 0 ? '+' : '') + x.u.toFixed(2)) + '</td><td class="n hide-sm">' + (x.ag ? pc(x.r, x.apf) : '–') + '</td></tr>';
+    return '<tr><td><b>' + esc(x.pl) + '</b><div class="upd">' + esc(x.sp) + ' · ' + esc(x.ev) + '</div></td><td>' + esc(x.pr) + ' ' + esc(x.sd) + ' ' + (x.ln === null ? '' : x.ln) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.u) + '">' + (x.u === null || x.u === undefined ? '–' : uu(x.u, true, 2) + ' · ' + ud(x.u, true)) + '</td><td class="n hide-sm">' + (x.ag ? pc(x.r, x.apf) : '–') + '</td></tr>';
   }).join('') || '<tr><td colspan="8" class="sub">No props cleared the bar this day.</td></tr>';
   $('tExCard').style.display = te.length ? '' : 'none';
   $('tEx').innerHTML = te.map(function (x) {
