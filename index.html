@@ -457,7 +457,7 @@ function howNums() {
     var bc = R.straight && R.straight.beat_close;
     $('howB').textContent = 'How we do it: we only bet when an app beats Pinnacle\'s fair price by 3% or more.' + (bc ? ' So far ' + Math.round(bc * 100) + '% of our straight bets got a better number than the closing line, the best sign an edge is real.' : '');
     var worst = null; Object.keys(R.days || {}).forEach(function (d) { var x = R.days[d].straight; if (x && x.w + x.l + x.p && (worst === null || x.profit < worst.p)) worst = { d: d, p: x.profit }; });
-    $('howC').textContent = 'How we do it: 1 unit = $50 on a $5,000 paper bankroll, a quarter of the Kelly formula, and never more than 3% on one bet.' + (worst && worst.p < 0 ? ' Our worst straight-bet day so far (' + fd(worst.d) + ') cost ' + money(worst.p) + ', about ' + Math.round(-worst.p / R.start * 100) + '% of the bankroll. A bad day, not a disaster.' : '');
+    $('howC').textContent = 'How we do it: 1 unit = $50 on a $5,000 paper bankroll, a quarter of the Kelly formula, and never more than 3% on one bet.' + (worst && worst.p < 0 ? ' Our worst straight-bet day so far (' + fd(worst.d) + ') lost ' + money(-worst.p) + ', about ' + Math.round(-worst.p / R.start * 100) + '% of the bankroll. A bad day, not a disaster.' : '');
     $('howD').textContent = 'How we do it: all ' + n.toLocaleString() + ' bets are timestamped before the game and stay on this site, win or lose' + (st ? ', including the ' + st.l + ' straight-bet losses.' : '.');
   } catch (e) {}
 }
