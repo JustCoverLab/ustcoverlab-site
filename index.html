@@ -85,6 +85,28 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
 .how4 p{margin:0 0 6px;color:var(--muted);font-size:14.5px}
 .how4 .ex{font-size:13.5px;color:var(--ink);background:var(--card2);border-radius:8px;padding:8px 12px;margin-top:6px}
 @media (max-width:760px){.abcd{grid-template-columns:repeat(2,1fr)}}
+.ticker{display:flex;align-items:stretch;background:#0b0d11;border:1px solid var(--line);border-radius:10px;overflow:hidden;height:40px}
+.ticker .lab{flex:none;display:flex;align-items:center;gap:6px;padding:0 14px;background:var(--g);color:#06140b;font-weight:800;font-size:12px;letter-spacing:.8px}
+.ticker .lab i{width:7px;height:7px;border-radius:50%;background:#06140b;animation:blink 1.4s infinite}
+.ticker .vp{flex:1;overflow:hidden;position:relative;mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent)}
+.ticker .run{display:inline-flex;white-space:nowrap;align-items:center;height:40px;animation:tick var(--dur,90s) linear infinite;padding-left:100%}
+.ticker:hover .run{animation-play-state:paused}
+.ticker .it{display:inline-flex;align-items:center;gap:8px;margin-right:34px;font-size:13.5px}
+.ticker .it b{font-size:11px;letter-spacing:.6px}
+@keyframes tick{to{transform:translateX(-100%)}}
+@keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.ticker .run{animation:none;padding-left:12px}.ticker .vp{overflow-x:auto}}
+.kt{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.6px;padding:3px 7px;border-radius:6px;white-space:nowrap}
+.k-INJURY{color:#f87171;background:#3d1717}.k-GAP{color:#60a5fa;background:#132a45}.k-EDGE{color:#22c55e;background:#123d24}.k-BET{color:#fbbf24;background:#3d3212}
+.k-PROP{color:#fbbf24;background:#3d3212}.k-WEATHER{color:#a5b4fc;background:#22264a}.k-OUR{color:#60a5fa;background:#132a45}.k-RATINGS{color:#9aa0aa;background:#2a2e36}
+.feed{display:grid;gap:0}
+.feed .row{display:grid;grid-template-columns:62px 120px 1fr;gap:12px;padding:11px 2px;border-top:1px solid var(--line);align-items:start}
+.feed .row:first-child{border-top:0}
+.feed .tm{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums;padding-top:2px}
+.feed .g{color:var(--muted);font-size:12.5px;margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.chips button[aria-pressed="true"]{background:var(--g);color:#06140b;border-color:var(--g)}
+@media (max-width:760px){.feed .row{grid-template-columns:1fr;gap:4px}}
 </style>
 </head>
 <body>
@@ -158,6 +180,17 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
       </div>
       <div class="tiles" id="tTiles" style="margin-top:14px"></div>
     </div>
+    <div class="ticker" id="ticker" aria-label="Lab wire: the latest data the model is using"><div class="lab"><i></i>LAB WIRE</div><div class="vp"><div class="run" id="tRun"></div></div></div>
+    <div class="seg" role="tablist" aria-label="Today view" id="tSeg" style="grid-template-columns:repeat(2,1fr)">
+      <button type="button" role="tab" data-v="bets" aria-selected="true">Bets &amp; results</button><button type="button" role="tab" data-v="data" aria-selected="false">Today's data</button>
+    </div>
+    <div class="card" id="tData" style="display:none">
+      <h2>Today's data</h2>
+      <p class="sub">Everything the model took in this day: injury news and how the line reacted, gaps between our ratings and the market, edges the scanner spotted, weather, ratings updates and the bets it logged. Newest first.</p>
+      <div class="chips" id="tChips"></div>
+      <div class="feed" id="tFeed"></div>
+    </div>
+    <div id="tBetsView">
     <div class="card">
       <h2>Results by category</h2>
       <p class="sub">How the day went in each bet type. Same definitions as The Record.</p>
@@ -177,6 +210,7 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
       <h2>Teasers &amp; parlays</h2>
       <p class="sub">Aggressive bankroll only. Built from legs that each had a 3%+ edge.</p>
       <div class="scroll"><table><thead><tr><th>Bet</th><th>Legs</th><th class="n">Odds</th><th class="n">EV</th><th class="n">Stake</th><th>Result</th><th class="n">Profit</th></tr></thead><tbody id="tEx"></tbody></table></div>
+    </div>
     </div>
     <p class="sub" style="text-align:center">Paper bets only, logged by the model before the games. Prices move, so what you see at your app may differ. 21+ · 1-800-GAMBLER</p>
   </section>
@@ -409,7 +443,7 @@ function todayStr() { try { return new Intl.DateTimeFormat('en-CA', { timeZone: 
 var TD = null;
 function dayAdd(d, n) { var x = new Date(d + 'T12:00:00'); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); }
 function allDays() { return Object.keys(R.days || {}).concat(B.map(function (x) { return x.d; }), P.map(function (x) { return x.d; })).filter(Boolean).sort(); }
-function setDay(d) { TD = d; $('tDate').value = d; today(); }
+function setDay(d) { TD = d; $('tDate').value = d; TK = ''; today(); feed(); }
 function amtS(v, u) { return u === 'u' ? amt(v, 'u', true) : money(v, true); }
 function today() {
   var t = todayStr(), ds = allDays(), first = ds[0] || t;
@@ -464,10 +498,33 @@ function howNums() {
     $('howD').textContent = 'How we do it: all ' + n.toLocaleString() + ' bets are timestamped before the game and stay on this site, win or lose' + (st ? ', including the ' + st.l + ' straight-bet losses.' : '.');
   } catch (e) {}
 }
+var FD = [], TV = 'bets', TK = '';
+var KN = { INJURY: 'Injury', 'GAP ALERT': 'Gap alert', EDGE: 'Edge', BET: 'Model bet', PROP: 'Prop', WEATHER: 'Weather', 'OUR LINE': 'Our line', RATINGS: 'Ratings' };
+var KG = [['', 'All'], ['INJURY', 'Injuries'], ['GAP ALERT', 'Gap alerts'], ['EDGE', 'Edges'], ['BET', 'Model bets'], ['PROP', 'Props'], ['WEATHER', 'Weather'], ['OUR LINE', 'Our line'], ['RATINGS', 'Ratings']];
+function kt(k) { return '<span class="kt k-' + k.split(' ')[0] + '">' + (KN[k] || k).toUpperCase() + '</span>'; }
+function tm(t) { if (!t) return ''; var h = +t.slice(0, 2), m = t.slice(3); return (h % 12 || 12) + ':' + m + (h < 12 ? ' AM' : ' PM'); }
+function feed() {
+  var day = TD, L = FD.filter(function (f) { return f.d === day; });
+  var tl = L.filter(function (f) { return f.k !== 'PROP' || /edge/.test(f.x); }).slice(0, 40);
+  if (!tl.length) tl = [{ k: 'RATINGS', sp: '', x: 'No new data logged for this day yet. The wire fills in as the model runs.', g: '' }];
+  $('tRun').innerHTML = tl.map(function (f) { return '<span class="it">' + kt(f.k) + (f.sp ? '<b style="color:var(--muted)">' + esc(f.sp) + '</b>' : '') + '<span>' + (f.g ? '<b style="font-size:13.5px;letter-spacing:0">' + esc(f.g) + '</b> · ' : '') + esc(f.x) + '</span></span>'; }).join('');
+  $('tRun').style.setProperty('--dur', Math.max(40, tl.length * 9) + 's');
+  var have = {}; L.forEach(function (f) { have[f.k] = (have[f.k] || 0) + 1; });
+  $('tChips').innerHTML = KG.filter(function (k) { return !k[0] || have[k[0]]; }).map(function (k) { return '<button type="button" data-k="' + k[0] + '" aria-pressed="' + (TK === k[0]) + '">' + k[1] + (k[0] ? ' ' + have[k[0]] : ' ' + L.length) + '</button>'; }).join('');
+  [].forEach.call($('tChips').children, function (b) { b.onclick = function () { TK = b.dataset.k; feed(); }; });
+  var V = L.filter(function (f) { return !TK || f.k === TK; });
+  $('tFeed').innerHTML = V.map(function (f) { return '<div class="row"><div class="tm">' + (tm(f.t) || '–') + '</div><div>' + kt(f.k) + ' <span class="sub" style="font-size:12px">' + esc(f.sp) + '</span></div><div>' + esc(f.x) + (f.g ? '<div class="g">' + esc(f.g) + '</div>' : '') + '</div></div>'; }).join('') || '<p class="sub">Nothing logged for this day yet.</p>';
+}
+function tView(v) {
+  TV = v; [].forEach.call($('tSeg').children, function (b) { b.setAttribute('aria-selected', b.dataset.v === v ? 'true' : 'false'); });
+  $('tData').style.display = v === 'data' ? '' : 'none'; $('tBetsView').style.display = v === 'data' ? 'none' : '';
+}
+[].forEach.call($('tSeg').children, function (b) { b.onclick = function () { tView(b.dataset.v); }; });
+$('ticker').onclick = function () { tView('data'); $('tData').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
 function get(f) { return fetch('data/' + f, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(f); return r.json(); }); }
-Promise.all([get('record.json'), get('bets.json'), get('props.json'), get('exotics.json').catch(function () { return []; })]).then(function (a) {
-  R = a[0]; B = a[1]; P = a[2]; EXo = a[3];
-  record(); today(); howNums();
+Promise.all([get('record.json'), get('bets.json'), get('props.json'), get('exotics.json').catch(function () { return []; }), get('feed.json').catch(function () { return []; })]).then(function (a) {
+  R = a[0]; B = a[1]; P = a[2]; EXo = a[3]; FD = a[4];
+  record(); today(); feed(); howNums();
   opts('fSport', Array.from(new Set(B.map(function (x) { return x.sp; }))).sort()); bets();
   opts('pSport', Array.from(new Set(P.map(function (x) { return x.sp; }))).sort()); props();
 }).catch(function () { $('upd').textContent = 'Could not load the record. Try refreshing.'; });
