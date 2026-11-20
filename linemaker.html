@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Power Ratings Line Maker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a scoreboard-style matchup card on the left (the job: make a line), the sortable ratings board on the right; stacks on phones. */
+:root{
+  --bg:#EEF1EE; --panel:#FFFFFF; --ink:#13201A; --muted:#5B6A62; --line:#D3DBD5;
+  --accent:#17624A; --accent-ink:#FFFFFF; --soft:#E3EEE8; --amber:#A8670F; --amber-bg:#FBF0DA; --good:#16794A; --good-bg:#DDF2E5;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1512; --panel:#16201B; --ink:#E6EEE9; --muted:#97A89E; --line:#2A3831;
+  --accent:#3FAE82; --accent-ink:#04120C; --soft:#1C2D25; --amber:#E7B45A; --amber-bg:#3A2B10; --good:#5BD394; --good-bg:#12321F; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0E1512; --panel:#16201B; --ink:#E6EEE9; --muted:#97A89E; --line:#2A3831;
+  --accent:#3FAE82; --accent-ink:#04120C; --soft:#1C2D25; --amber:#E7B45A; --amber-bg:#3A2B10; --good:#5BD394; --good-bg:#12321F; color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 40px;display:grid;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:700;font-size:32px;letter-spacing:.3px;margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;background:var(--soft);color:var(--accent)}
+.chip.warn{background:var(--amber-bg);color:var(--amber)}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(64px,1fr));gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:5px}
+.tabs button{font:inherit;font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.5px;border:0;border-radius:8px;padding:8px 14px;background:transparent;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:14px}
+.label{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.teams{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end}
+.team{display:grid;gap:6px}
+.team .pw{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;min-height:18px}
+.at{font-family:var(--display);font-weight:700;font-size:22px;color:var(--muted);padding-bottom:26px}
+select,input[type=number],input[type=text],input[type=search]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.swap{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer;justify-self:start}
+.result{border:2px solid var(--accent);border-radius:12px;padding:14px;display:grid;gap:10px;background:var(--soft)}
+.big{font-family:var(--display);font-weight:700;font-size:44px;line-height:1;font-variant-numeric:tabular-nums;text-wrap:balance}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--panel);border-radius:8px;padding:8px 10px}
+.stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.stat .v{font-family:var(--display);font-weight:700;font-size:24px;font-variant-numeric:tabular-nums}
+.math{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vars{display:grid;gap:10px}
+.row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.row .hint{display:block;font-size:12px;color:var(--muted)}
+.toggle{display:flex;align-items:center;gap:10px;cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--accent)}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{font:inherit;font-weight:600;width:34px;height:34px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;cursor:pointer}
+.stepper output{min-width:54px;text-align:center;font-family:var(--display);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.market{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+.verdict{font-size:14px;border-radius:10px;padding:10px 12px;background:var(--bg)}
+.verdict.play{background:var(--good-bg);color:var(--good)}
+.verdict.lean{background:var(--amber-bg);color:var(--amber)}
+
+.mkt-card{border:2px solid var(--ink);border-radius:14px;padding:14px;display:grid;gap:12px;background:var(--panel)}
+.mkt-in{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;align-items:end}
+.mkt-in input{font-family:var(--display);font-weight:700;font-size:28px;padding:8px 12px;font-variant-numeric:tabular-nums}
+.mkt-in #price,.mkt-in #bank{font-size:20px}
+.bet{border-radius:12px;padding:14px;display:grid;gap:10px;background:var(--bg);border:1px solid var(--line)}
+.bet.play{background:var(--good-bg);border-color:var(--good)}
+.bet.lean{background:var(--amber-bg);border-color:var(--amber)}
+.bet .pickline{font-family:var(--display);font-weight:700;font-size:40px;line-height:1.05;text-wrap:balance}
+.bet.play .pickline{color:var(--good)} .bet.lean .pickline{color:var(--amber)}
+.bet .why{font-size:13px;color:var(--muted)}
+.bstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bstat{background:var(--panel);border-radius:10px;padding:10px 12px}
+.bstat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.bstat .v{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.1;font-variant-numeric:tabular-nums}
+.bstat .s{font-size:12px;color:var(--muted)}
+.bstat.gap .v{font-size:46px}
+@media (max-width:520px){.mkt-in{grid-template-columns:1fr 1fr}.mkt-in .wide{grid-column:1/-1}.bstats{grid-template-columns:1fr 1fr}.bstat.gap{grid-column:1/-1}.bet .pickline{font-size:32px}}
+.board{max-height:780px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th{position:sticky;top:0;background:var(--panel);text-align:left;font-weight:600;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding:8px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.n{text-align:right}
+.bar{height:6px;border-radius:3px;background:var(--accent);opacity:.75}
+.bar.neg{background:var(--amber)}
+.pick{display:flex;gap:4px}
+.pick button{font:inherit;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;padding:3px 7px;cursor:pointer}
+.pick button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.note{font-size:12px;color:var(--muted)}
+.adjnote{font-size:12px;color:var(--amber)}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,1fr)} .big{font-size:36px} .tabs button{font-size:18px;padding:8px 6px}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<nav style="max-width:1180px;margin:0 auto;padding:12px 16px 0;display:flex;justify-content:space-between;align-items:center;font:600 13px/1.4 system-ui,sans-serif"><a href="index.html" style="color:inherit;text-decoration:none;opacity:.8">&larr; Just Cover Lab</a><span style="opacity:.6">Win / Lose / Draw &lt; Cover</span></nav>
+<main class="wrap">
+  <header>
+    <div>
+      <h1>Power Ratings Line Maker</h1>
+      <div class="sub" id="asof"></div>
+    </div>
+    <span class="chip" id="src">Snapshot</span>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Sport" id="tabs"></div>
+
+  <div class="grid">
+    <section class="card" aria-labelledby="mk-label">
+      <span class="label" id="mk-label">Matchup</span>
+      <div class="teams">
+        <div class="team"><label class="label" for="away">Away</label><select id="away"></select><div class="pw" id="awayPw"></div></div>
+        <div class="at">@</div>
+        <div class="team"><label class="label" for="home">Home</label><select id="home"></select><div class="pw" id="homePw"></div></div>
+      </div>
+      <button class="swap" id="swap" type="button">Swap home and away</button>
+
+      <div class="result" aria-live="polite">
+        <span class="label">Our line (no market needed)</span>
+        <div class="big" id="line"></div>
+        <div class="stats">
+          <div class="stat"><div class="k">Home wins by</div><div class="v" id="marg"></div></div>
+          <div class="stat"><div class="k">Home win chance</div><div class="v" id="wp"></div></div>
+          <div class="stat"><div class="k">Fair moneyline</div><div class="v" id="ml"></div></div>
+        </div>
+        <div class="math" id="math"></div>
+      </div>
+
+      <span class="label">Game variables</span>
+      <div class="vars" id="vars"></div>
+
+      <div class="mkt-card">
+        <div class="mkt-in">
+          <div class="wide"><label class="label" for="mkt">Market line · home team</label><input type="text" id="mkt" inputmode="decimal" placeholder="-3.5"></div>
+          <div><label class="label" for="price">Price</label><input type="text" id="price" inputmode="numeric" value="-110"></div>
+          <div><label class="label" for="bank">Bankroll ($)</label><input type="text" id="bank" inputmode="numeric" value="10000"></div>
+        </div>
+        <div class="bet" id="bet" aria-live="polite">
+          <span class="label">Suggested bet</span>
+          <div class="pickline" id="pick">Enter the market line</div>
+          <div class="bstats">
+            <div class="bstat gap"><div class="k">Point gap</div><div class="v" id="gap">–</div><div class="s" id="gapS">our line vs the market</div></div>
+            <div class="bstat"><div class="k">Est. EV</div><div class="v" id="ev">–</div><div class="s" id="evS"></div></div>
+            <div class="bstat"><div class="k">Bet size</div><div class="v" id="size">–</div><div class="s" id="sizeS"></div></div>
+          </div>
+          <div class="why" id="why">Type the sportsbook's spread for the home team above (for example -3.5 or +7).</div>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="card" aria-labelledby="bd-label">
+      <div class="row"><span class="label" id="bd-label">Ratings board</span><span class="note" id="count"></span></div>
+      <input type="search" id="q" placeholder="Search teams" aria-label="Search teams">
+      <div class="board"><table>
+        <thead><tr><th data-k="rank">Rank</th><th data-k="team">Team</th><th data-k="power" class="n">Power</th><th></th><th>Set as</th></tr></thead>
+        <tbody id="tb"></tbody>
+      </table></div>
+      <p class="note">Power = points better than an average team on a neutral field. Our line = home edge + home power − away power, plus the game variables you set.</p>
+    </section>
+  </div>
+  <p class="note">Ratings come from the Just Cover Lab model and refresh daily. College basketball 5+ point gaps are the only proven edge (10-season backtest); other sports are for reference. Not betting advice.</p>
+</main>
+
+<script>
+var SNAP = "sport,rank,team,power,note\nMETA,NFL,1.6,Mon 11/16 7:37 AM,\nNFL,1,JAX,8.2,\nNFL,2,LA,6.8,-0.3  (Injuries (Avila OL 0.3) -0.3)\nNFL,3,BUF,6.7,-0.3  (Injuries (Brown OL 0.3) -0.3)\nNFL,4,SF,5.8,\nNFL,5,KC,4.9,\nNFL,6,CIN,4.6,\nNFL,7,DET,3.8,-0.3  (Injuries (Reed CB 0.3) -0.3)\nNFL,8,SEA,3.5,\"-0.7  (Injuries (Williams DL 0.4, Cross OL 0.2) -0.7)\"\nNFL,9,CHI,2.8,\nNFL,10,DEN,2.5,\nNFL,11,HOU,1.9,\"-1  (Injuries (Hunter DL 0.5, Al-Shaair LB 0.1, Rutledge OL 0.3) -1)\"\nNFL,12,GB,1.8,\"-0.3  (Injuries (Franklin LB 0.1, Rhyan OL 0.2) -0.3)\"\nNFL,13,MIN,1.6,\"+0.3  (Injuries (Hockenson TE 0.2, Cashman LB 0.2, Ingram-Dawkins DL 0.3) -0.6; QB Kirk Cousins vs recent starters (Kyler Murray/Carson Wentz/Kirk Cousins) +0.9)\"\nNFL,14,TB,0.3,+0.3  (QB Baker Mayfield vs recent starters (Jalon Daniels/Baker Mayfield) +0.3)\nNFL,15,DAL,0.1,\nNFL,16,NYG,-0.4,\nNFL,17,NE,-0.7,\nNFL,18,PIT,-0.7,\nNFL,19,CAR,-0.8,\nNFL,20,WAS,-1.9,\nNFL,21,BAL,-2.1,\nNFL,22,ATL,-2.6,\nNFL,23,NO,-2.9,\"-0.6  (Injuries (McCoy OL 0.3, Fuaga OL 0.3) -0.6)\"\nNFL,24,CLE,-3.8,\nNFL,25,LAC,-4.1,\nNFL,26,NYJ,-5.3,\nNFL,27,IND,-5.5,\"-0.4  (Injuries (Davis-Gaither LB 0.1, Travis OL 0.3) -0.4)\"\nNFL,28,LV,-5.9,-1.5  (QB Fernando Mendoza vs recent starters (Kirk Cousins/Fernando Mendoza) -1.5)\nNFL,29,PHI,-6.8,-1  (QB Joe Milton III vs recent starters (Tanner McKee/Jalen Hurts/Joe Milton III) -1)\nNFL,30,TEN,-7.1,\"-0.8  (Injuries (Barton LB 0.1, Skoronski OL 0.3, Tate WR 0.1, Hill LB 0.2) -0.8)\"\nNFL,31,MIA,-8.0,-2.2  (Injuries (Brewer OL 0.3) -0.3; QB Kyle McCord vs recent starters (Malik Willis/Kyle McCord) -1.9)\nNFL,32,ARI,-8.2,-2.5  (Injuries (Froholdt OL 0.3) -0.3; QB Carson Beck vs recent starters (Jacoby Brissett/Gardner Minshew) -2.2)\nMETA,CFB,2.7,Sun 11/15 11:37 PM,\nCFB,1,Georgia,27.5,\nCFB,2,Notre Dame,25.8,\nCFB,3,Alabama,23.1,\nCFB,4,Miami,22.6,\nCFB,5,Ohio State,22.2,\nCFB,6,Texas,21.4,\nCFB,7,Indiana,21.2,\nCFB,8,LSU,20.8,\nCFB,9,Oregon,19.2,\nCFB,10,Tennessee,18.4,\nCFB,11,Ole Miss,17.8,\nCFB,12,Utah,16.6,\nCFB,13,Texas Tech,15.0,\nCFB,14,Wake Forest,14.3,\nCFB,15,Iowa,14.1,\nCFB,16,Louisville,14.1,\nCFB,17,USC,13.9,\nCFB,18,BYU,13.6,\nCFB,19,Nebraska,12.9,\nCFB,20,Florida,12.7,\nCFB,21,Oklahoma,12.7,\nCFB,22,Missouri,12.5,\nCFB,23,Penn State,12.3,\nCFB,24,UCLA,12.1,\nCFB,25,Arizona,11.7,\nCFB,26,Texas A&M,11.7,\nCFB,27,Auburn,11.5,\nCFB,28,Northwestern,10.7,\nCFB,29,South Carolina,10.6,\nCFB,30,Duke,9.5,\nCFB,31,Kentucky,9.4,\nCFB,32,Baylor,9.4,\nCFB,33,Washington,9.2,\nCFB,34,Oklahoma State,9.1,\nCFB,35,Michigan,8.8,\nCFB,36,Houston,8.8,\nCFB,37,Boise State,8.8,\nCFB,38,Wisconsin,8.5,\nCFB,39,SMU,8.3,\nCFB,40,TCU,8.0,\nCFB,41,Illinois,7.8,\nCFB,42,Florida State,7.1,\nCFB,43,North Carolina,6.9,\nCFB,44,Pittsburgh,5.3,\nCFB,45,Arkansas,5.0,\nCFB,46,Kansas,4.7,\nCFB,47,Clemson,4.6,\nCFB,48,Virginia,4.2,\nCFB,49,Iowa State,4.0,\nCFB,50,New Mexico,3.9,\nCFB,51,Mississippi State,3.8,\nCFB,52,Memphis,3.3,\nCFB,53,Vanderbilt,2.9,\nCFB,54,Arizona State,2.9,\nCFB,55,Texas State,2.7,\nCFB,56,North Dakota State,2.3,\nCFB,57,Michigan State,2.0,\nCFB,58,Liberty,1.9,\nCFB,59,Virginia Tech,1.6,\nCFB,60,North Texas,1.6,\nCFB,61,Minnesota,1.4,\nCFB,62,Purdue,1.2,\nCFB,63,UCF,1.0,\nCFB,64,Cincinnati,0.9,\nCFB,65,Kansas State,0.9,\nCFB,66,James Madison,0.8,\nCFB,67,West Virginia,0.7,\nCFB,68,Louisiana Tech,0.3,\nCFB,69,Syracuse,0.2,\nCFB,70,Colorado,-0.2,\nCFB,71,Oregon State,-0.5,\nCFB,72,Maryland,-0.7,\nCFB,73,UTSA,-0.7,\nCFB,74,NC State,-1.2,\nCFB,75,Tulsa,-1.4,\nCFB,76,Air Force,-2.2,\nCFB,77,Georgia Tech,-2.2,\nCFB,78,South Florida,-2.3,\nCFB,79,Fresno State,-2.5,\nCFB,80,Western Michigan,-2.5,\nCFB,81,Army,-2.6,\nCFB,82,Georgia Southern,-2.8,\nCFB,83,Toledo,-2.9,\nCFB,84,Boston College,-3.1,\nCFB,85,Navy,-3.1,\nCFB,86,UNLV,-4.2,\nCFB,87,UConn,-4.3,\nCFB,88,Louisiana,-4.6,\nCFB,89,Stanford,-5.1,\nCFB,90,East Carolina,-6.1,\nCFB,91,Jacksonville State,-6.1,\nCFB,92,Rutgers,-6.3,\nCFB,93,Utah State,-6.4,\nCFB,94,Florida Atlantic,-6.6,\nCFB,95,Washington State,-7.6,\nCFB,96,San Diego State,-7.7,\nCFB,97,Ohio,-7.8,\nCFB,98,California,-8.1,\nCFB,99,Miami (OH),-8.1,\nCFB,100,South Alabama,-8.2,\nCFB,101,Tulane,-8.3,\nCFB,102,Wyoming,-8.6,\nCFB,103,Nevada,-8.6,\nCFB,104,Delaware,-9.0,\nCFB,105,UAB,-9.1,\nCFB,106,Central Michigan,-9.5,\nCFB,107,Hawai'i,-9.8,\nCFB,108,App State,-9.8,\nCFB,109,Georgia State,-10.2,\nCFB,110,Kennesaw State,-10.3,\nCFB,111,Arkansas State,-10.3,\nCFB,112,Buffalo,-10.6,\nCFB,113,Temple,-11.0,\nCFB,114,Florida International,-11.1,\nCFB,115,Coastal Carolina,-11.2,\nCFB,116,Marshall,-11.3,\nCFB,117,San Jos\u00e9 State,-11.4,\nCFB,118,Troy,-11.5,\nCFB,119,Old Dominion,-12.2,\nCFB,120,Western Kentucky,-13.0,\nCFB,121,Rice,-13.2,\nCFB,122,Middle Tennessee,-13.6,\nCFB,123,Missouri State,-14.6,\nCFB,124,Colorado State,-14.6,\nCFB,125,Bowling Green,-14.6,\nCFB,126,New Mexico State,-15.9,\nCFB,127,Eastern Michigan,-16.2,\nCFB,128,Southern Miss,-17.2,\nCFB,129,Massachusetts,-17.4,\nCFB,130,Ball State,-18.7,\nCFB,131,Charlotte,-19.1,\nCFB,132,Kent State,-19.3,\nCFB,133,UL Monroe,-19.6,\nCFB,134,Northern Illinois,-19.9,\nCFB,135,UTEP,-20.2,\nCFB,136,Akron,-21.6,\nCFB,137,Sam Houston,-22.0,\nCFB,138,Sacramento State,-24.2,\nMETA,NBA,1.6,Mon 11/16 4:39 PM,\nNBA,1,SA,10.6,\nNBA,2,BOS,8.1,\nNBA,3,HOU,7.3,\nNBA,4,DET,5.1,\nNBA,5,NY,4.8,\nNBA,6,DEN,4.8,\nNBA,7,OKC,4.7,\nNBA,8,MIN,4.3,\nNBA,9,LAL,4.0,\nNBA,10,POR,4.0,\nNBA,11,PHI,2.8,\nNBA,12,GS,1.9,\nNBA,13,MIA,1.5,\nNBA,14,ATL,0.8,\nNBA,15,MEM,0.4,\nNBA,16,TBD,0.0,\nNBA,17,CLE,-0.1,\nNBA,18,DAL,-0.2,\nNBA,19,TOR,-0.6,\nNBA,20,PHX,-0.8,\nNBA,21,ORL,-2.0,\nNBA,22,IND,-3.4,\nNBA,23,LAC,-4.2,\nNBA,24,CHA,-5.4,\nNBA,25,BKN,-5.5,\nNBA,26,WSH,-5.5,\nNBA,27,NO,-6.2,\nNBA,28,UTAH,-6.6,\nNBA,29,CHI,-6.8,\nNBA,30,MIL,-8.8,\nNBA,31,SAC,-9.1,\nMETA,CBB,6.6,Mon 11/16 8:47 PM,\nCBB,1,Duke Blue Devils,24.8,\nCBB,2,Florida Gators,23.9,\nCBB,3,Illinois Fighting Illini,22.6,\nCBB,4,Arizona Wildcats,19.8,\nCBB,5,Michigan State Spartans,19.7,\nCBB,6,Houston Cougars,19.5,\nCBB,7,UConn Huskies,19.2,\nCBB,8,Virginia Cavaliers,19.2,\nCBB,9,Iowa State Cyclones,18.3,\nCBB,10,Vanderbilt Commodores,17.9,\nCBB,11,Texas Tech Red Raiders,17.8,\nCBB,12,Kansas Jayhawks,17.4,\nCBB,13,Texas Longhorns,17.4,\nCBB,14,Louisville Cardinals,17.3,\nCBB,15,Miami Hurricanes,17.1,\nCBB,16,LSU Tigers,16.9,\nCBB,17,Nebraska Cornhuskers,16.8,\nCBB,18,St. John's Red Storm,16.3,\nCBB,19,Gonzaga Bulldogs,16.3,\nCBB,20,Alabama Crimson Tide,16.2,\nCBB,21,BYU Cougars,15.6,\nCBB,22,UCLA Bruins,15.5,\nCBB,23,USC Trojans,15.3,\nCBB,24,Tennessee Volunteers,15.2,\nCBB,25,Cincinnati Bearcats,15.0,\nCBB,26,Texas A&M Aggies,14.3,\nCBB,27,Arkansas Razorbacks,14.3,\nCBB,28,Michigan Wolverines,14.2,\nCBB,29,Baylor Bears,13.7,\nCBB,30,Georgia Bulldogs,13.6,\nCBB,31,Iowa Hawkeyes,13.4,\nCBB,32,Utah State Aggies,13.3,\nCBB,33,Marquette Golden Eagles,13.3,\nCBB,34,Indiana Hoosiers,13.1,\nCBB,35,Missouri Tigers,13.1,\nCBB,36,Xavier Musketeers,12.9,\nCBB,37,New Mexico Lobos,12.6,\nCBB,38,Purdue Boilermakers,12.5,\nCBB,39,Ohio State Buckeyes,12.4,\nCBB,40,Auburn Tigers,12.4,\nCBB,41,West Virginia Mountaineers,12.2,\nCBB,42,Minnesota Golden Gophers,12.1,\nCBB,43,Villanova Wildcats,11.9,\nCBB,44,Virginia Tech Hokies,11.6,\nCBB,45,Oklahoma Sooners,11.5,\nCBB,46,Florida State Seminoles,11.3,\nCBB,47,Kentucky Wildcats,11.2,\nCBB,48,Grand Canyon Lopes,11.2,\nCBB,49,TCU Horned Frogs,11.2,\nCBB,50,North Carolina Tar Heels,11.1,\nCBB,51,Providence Friars,11.1,\nCBB,52,Wisconsin Badgers,10.8,\nCBB,53,VCU Rams,10.8,\nCBB,54,Saint Louis Billikens,10.8,\nCBB,55,Creighton Bluejays,10.7,\nCBB,56,High Point Panthers,10.6,\nCBB,57,NC State Wolfpack,10.5,\nCBB,58,Ole Miss Rebels,10.5,\nCBB,59,Arizona State Sun Devils,10.2,\nCBB,60,SMU Mustangs,10.1,\nCBB,61,Oklahoma State Cowboys,9.8,\nCBB,62,Murray State Racers,9.8,\nCBB,63,Maryland Terrapins,9.4,\nCBB,64,Pittsburgh Panthers,9.3,\nCBB,65,DePaul Blue Demons,9.2,\nCBB,66,Notre Dame Fighting Irish,9.0,\nCBB,67,Oregon Ducks,8.6,\nCBB,68,Syracuse Orange,8.5,\nCBB,69,San Diego State Aztecs,8.4,\nCBB,70,George Mason Patriots,8.0,\nCBB,71,Mississippi State Bulldogs,7.9,\nCBB,72,Georgetown Hoyas,7.8,\nCBB,73,Wyoming Cowboys,7.8,\nCBB,74,George Washington Revolutionaries,7.7,\nCBB,75,UNC Wilmington Seahawks,7.7,\nCBB,76,Wichita State Shockers,7.3,\nCBB,77,Santa Clara Broncos,7.3,\nCBB,78,South Florida Bulls,7.2,\nCBB,79,Saint Mary's Gaels,7.1,\nCBB,80,Wake Forest Demon Deacons,7.0,\nCBB,81,Nevada Wolf Pack,6.9,\nCBB,82,McNeese Cowboys,6.9,\nCBB,83,Charleston Cougars,6.9,\nCBB,84,Butler Bulldogs,6.6,\nCBB,85,Oregon State Beavers,6.2,\nCBB,86,South Carolina Gamecocks,6.1,\nCBB,87,Memphis Tigers,6.1,\nCBB,88,UCF Knights,6.0,\nCBB,89,Tulsa Golden Hurricane,6.0,\nCBB,90,Seton Hall Pirates,6.0,\nCBB,91,Boise State Broncos,5.9,\nCBB,92,Wright State Raiders,5.9,\nCBB,93,Clemson Tigers,5.9,\nCBB,94,Utah Valley Wolverines,5.9,\nCBB,95,Stanford Cardinal,5.9,\nCBB,96,Rutgers Scarlet Knights,5.7,\nCBB,97,Penn State Nittany Lions,5.7,\nCBB,98,Illinois State Redbirds,5.4,\nCBB,99,Richmond Spiders,5.0,\nCBB,100,Western Michigan Broncos,5.0,\nCBB,101,Boston College Eagles,4.9,\nCBB,102,Washington Huskies,4.9,\nCBB,103,Akron Zips,4.9,\nCBB,104,Miami (OH) RedHawks,4.7,\nCBB,105,Kent State Golden Flashes,4.5,\nCBB,106,Loyola Chicago Ramblers,4.5,\nCBB,107,Colorado Buffaloes,4.3,\nCBB,108,Colorado State Rams,4.1,\nCBB,109,Pacific Tigers,4.1,\nCBB,110,UIC Flames,4.0,\nCBB,111,Texas State Bobcats,4.0,\nCBB,112,Western Kentucky Hilltoppers,3.9,\nCBB,113,St. Bonaventure Bonnies,3.8,\nCBB,114,Furman Paladins,3.5,\nCBB,115,Utah Utes,3.5,\nCBB,116,Belmont Bruins,3.4,\nCBB,117,UC Santa Barbara Gauchos,3.4,\nCBB,118,Pepperdine Waves,3.4,\nCBB,119,St. Thomas-Minnesota Tommies,3.3,\nCBB,120,Northwestern Wildcats,3.3,\nCBB,121,Davidson Wildcats,3.2,\nCBB,122,Kansas State Wildcats,3.2,\nCBB,123,Florida International Panthers,3.1,\nCBB,124,Georgia Tech Yellow Jackets,2.9,\nCBB,125,Dayton Flyers,2.8,\nCBB,126,UC San Diego Tritons,2.8,\nCBB,127,Valparaiso Beacons,2.7,\nCBB,128,Rhode Island Rams,2.4,\nCBB,129,Harvard Crimson,2.3,\nCBB,130,Yale Bulldogs,2.1,\nCBB,131,Fordham Rams,2.1,\nCBB,132,Washington State Cougars,2.1,\nCBB,133,Vermont Catamounts,2.0,\nCBB,134,Ohio Bobcats,2.0,\nCBB,135,Towson Tigers,1.9,\nCBB,136,UT Martin Skyhawks,1.9,\nCBB,137,UAB Blazers,1.9,\nCBB,138,Pennsylvania Quakers,1.9,\nCBB,139,California Golden Bears,1.8,\nCBB,140,Stephen F. Austin Lumberjacks,1.7,\nCBB,141,UNLV Rebels,1.7,\nCBB,142,Austin Peay Governors,1.7,\nCBB,143,Toledo Rockets,1.6,\nCBB,144,Saint Joseph's Hawks,1.5,\nCBB,145,UC Irvine Anteaters,1.4,\nCBB,146,Green Bay Phoenix,1.3,\nCBB,147,Charlotte 49ers,1.3,\nCBB,148,Montana State Bobcats,1.1,\nCBB,149,Missouri State Bears,0.9,\nCBB,150,Chattanooga Mocs,0.9,\nCBB,151,Old Dominion Monarchs,0.9,\nCBB,152,Georgia Gwinnett Grizzlies,0.8,\nCBB,153,Lees McRae Bobcats,0.8,\nCBB,154,Kennesaw State Owls,0.7,\nCBB,155,South Dakota State Jackrabbits,0.7,\nCBB,156,Liberty Flames,0.7,\nCBB,157,Bowling Green Falcons,0.6,\nCBB,158,Central Arkansas Bears,0.6,\nCBB,159,Seattle U Redhawks,0.5,\nCBB,160,Florida Atlantic Owls,0.4,\nCBB,161,Howard Bison,0.4,\nCBB,162,Duquesne Dukes,0.3,\nCBB,163,Northern Iowa Panthers,0.3,\nCBB,164,Western New Mexico Mustangs,0.2,\nCBB,165,North Texas Mean Green,0.2,\nCBB,166,Lamar Cardinals,0.2,\nCBB,167,Apprentice School Builders,0.2,\nCBB,168,Union (TN) Bulldogs,0.2,\nCBB,169,Briar Cliff Chargers,0.1,\nCBB,170,Western Colorado Mountaineers,0.1,\nCBB,171,Fort Valley State Wildcats,0.1,\nCBB,172,Truman State Bulldogs,0.1,\nCBB,173,Mid America Christian Evangels,0.1,\nCBB,174,San Francisco Dons,0.0,\nCBB,175,Viterbo V-Hawks,0.0,\nCBB,176,Princeton Tigers,0.0,\nCBB,177,Temple Owls,0.0,\nCBB,178,Bridgewater Eagles,0.0,\nCBB,179,Menlo Oaks,0.0,\nCBB,180,Oklahoma Panhandle PANHANDLE ST,0.0,\nCBB,181,Fresno Pacific Sunbirds,-0.1,\nCBB,182,Southern Illinois Salukis,-0.1,\nCBB,183,App State Mountaineers,-0.1,\nCBB,184,Rhode Island College Anchormen,-0.2,\nCBB,185,Kalamazoo Hornets,-0.2,\nCBB,186,Cal State San Marcos Cougars,-0.3,\nCBB,187,Hofstra Pride,-0.3,\nCBB,188,Loyola Marymount Lions,-0.3,\nCBB,189,IU Kokomo Cougars,-0.3,\nCBB,190,East Tennessee State Buccaneers,-0.4,\nCBB,191,York (NE) Panthers,-0.4,\nCBB,192,Livingstone Blue Bears,-0.4,\nCBB,193,Coastal Georgia Mariner,-0.4,\nCBB,194,Randolph Wildcats,-0.4,\nCBB,195,Southern Wesleyan Warriors,-0.4,\nCBB,196,Biola Eagles,-0.5,\nCBB,197,Newberry Wolves,-0.5,\nCBB,198,Stony Brook Seawolves,-0.5,\nCBB,199,Regis University REGIS UNIVERSITY,-0.5,\nCBB,200,Arkansas State Red Wolves,-0.6,\nCBB,201,Drake Bulldogs,-0.6,\nCBB,202,James Madison Dukes,-0.6,\nCBB,203,Cal State Bakersfield Roadrunners,-0.6,\nCBB,204,Bradley Braves,-0.6,\nCBB,205,Mount Olive Trojans,-0.6,\nCBB,206,Mary Baldwin Fighting Squirrels,-0.7,\nCBB,207,Southern Virginia Knights,-0.7,\nCBB,208,Campbellsville Tigers,-0.7,\nCBB,209,Central State Marauders,-0.8,\nCBB,210,Marshall Thundering Herd,-0.8,\nCBB,211,Montreat Cavaliers,-0.8,\nCBB,212,Tulane Green Wave,-0.9,\nCBB,213,Franklin Grizzlies,-0.9,\nCBB,214,UT Dallas Comets,-0.9,\nCBB,215,Concordia Chicago Cougars,-0.9,\nCBB,216,Lawrence Vikings,-0.9,\nCBB,217,Covenant Fighting Scots,-0.9,\nCBB,218,San Francisco State Gators,-0.9,\nCBB,219,Kentucky Wesleyan Panthers,-0.9,\nCBB,220,Lincoln (MO) Blue Tigers,-0.9,\nCBB,221,Alma Scots,-1.0,\nCBB,222,Michigan Dearborn Wolves,-1.0,\nCBB,223,Louisiana Christian Wildcats,-1.0,\nCBB,224,Cornell Big Red,-1.0,\nCBB,225,MIT Engineers,-1.0,\nCBB,226,Lipscomb Bisons,-1.0,\nCBB,227,Newman Jets,-1.0,\nCBB,228,Massachusetts Minutemen,-1.0,\nCBB,229,New College Mighty Banyans,-1.0,\nCBB,230,Christendom Crusaders,-1.0,\nCBB,231,Jessup Warriors,-1.0,\nCBB,232,Southeastern Baptist Chargers,-1.0,\nCBB,233,Paul Quinn Tigers,-1.0,\nCBB,234,Ottawa (KS) Braves,-1.1,\nCBB,235,Stillman Tigers,-1.1,\nCBB,236,Tennessee State Tigers,-1.1,\nCBB,237,Merrimack Warriors,-1.1,\nCBB,238,Webster Gorloks,-1.1,\nCBB,239,Chapman Panthers,-1.1,\nCBB,240,Stanton Elks,-1.1,\nCBB,241,Western Carolina Catamounts,-1.1,\nCBB,242,Pfeiffer Falcons,-1.1,\nCBB,243,Whittier Poets,-1.1,\nCBB,244,Maryville (MO) Saints,-1.1,\nCBB,245,Lane College Dragons,-1.1,\nCBB,246,Schreiner Mountaineers,-1.2,\nCBB,247,Kentucky Christian Knights,-1.2,\nCBB,248,Salish Kootenai Bison,-1.2,\nCBB,249,Florida Gulf Coast Eagles,-1.2,\nCBB,250,Centre Colonels,-1.2,\nCBB,251,Longwood Lancers,-1.2,\nCBB,252,Reinhardt Eagles,-1.2,\nCBB,253,Baptist (Fl) Eagles,-1.2,\nCBB,254,UC Merced Bobcats,-1.3,\nCBB,255,Cornell (IA) Rams,-1.3,\nCBB,256,Morris Hornets,-1.3,\nCBB,257,Columbia Lions,-1.3,\nCBB,258,Friends Falcons,-1.3,\nCBB,259,Roberts Wesleyan Redhawks,-1.3,\nCBB,260,Warren Wilson Owls,-1.3,\nCBB,261,American University Eagles,-1.3,\nCBB,262,Portland State Vikings,-1.3,\nCBB,263,Cal State Fullerton Titans,-1.3,\nCBB,264,Johnson & Wales Griffins,-1.3,\nCBB,265,Lyon Scots,-1.3,\nCBB,266,Rivier Raiders,-1.4,\nCBB,267,Cameron Aggies,-1.4,\nCBB,268,St. Mary's (MD) Seahawks,-1.4,\nCBB,269,UNT Dallas Trailblazers,-1.4,\nCBB,270,North Dakota State Bison,-1.4,\nCBB,271,Southern New Orleans Knights,-1.4,\nCBB,272,San Diego Toreros,-1.4,\nCBB,273,Loyola New Orleans Wolfpack,-1.4,\nCBB,274,Eureka Red Devils,-1.4,\nCBB,275,Monmouth Hawks,-1.4,\nCBB,276,St. Francis (IL) Fighting Saints,-1.4,\nCBB,277,Muskingum Fighting Muskies,-1.4,\nCBB,278,Trinity College of Jacksonville Eagles,-1.4,\nCBB,279,La Sierra Golden Eagles,-1.4,\nCBB,280,Willamette Bearcats,-1.4,\nCBB,281,Montana Grizzlies,-1.4,\nCBB,282,Arkansas Monticello Boll Weevils,-1.4,\nCBB,283,Buffalo Bulls,-1.4,\nCBB,284,Centenary (LA) Gentlemen,-1.4,\nCBB,285,Wofford Terriers,-1.4,\nCBB,286,Macalester Scots,-1.5,\nCBB,287,Lewis & Clark River Otters,-1.5,\nCBB,288,Blue Mountain Christian Toppers,-1.5,\nCBB,289,St. Joseph's Long Island Golden Eagles,-1.5,\nCBB,290,Texas Lutheran Bulldogs,-1.5,\nCBB,291,Milligan Buffaloes,-1.5,\nCBB,292,Ripon Red Hawks,-1.5,\nCBB,293,Framingham State Rams,-1.5,\nCBB,294,Portland Pilots,-1.5,\nCBB,295,Cal Poly Mustangs,-1.5,\nCBB,296,Campbell Fighting Camels,-1.5,\nCBB,297,Northwestern (OK) Rangers,-1.5,\nCBB,298,Kentucky State Thorobreds,-1.5,\nCBB,299,Clarke Pride,-1.5,\nCBB,300,Great Lakes Christian Crusaders,-1.6,\nCBB,301,Ecclesia Royals,-1.6,\nCBB,302,Colgate Raiders,-1.6,\nCBB,303,Monmouth (IL) Fighting Scots,-1.6,\nCBB,304,La Verne Leopards,-1.6,\nCBB,305,Carnegie Mellon Tartans,-1.6,\nCBB,306,Howard Payne Yellow Jackets,-1.6,\nCBB,307,North American Stallions,-1.6,\nCBB,308,Texas A&M-Kingsville Javelinas,-1.6,\nCBB,309,Boyce Bulldogs,-1.6,\nCBB,310,Hawai'i Rainbow Warriors,-1.6,\nCBB,311,Central Michigan Chippewas,-1.6,\nCBB,312,Elon Phoenix,-1.6,\nCBB,313,College of Biblical Studies Ambassadors,-1.6,\nCBB,314,Columbia International Rams,-1.6,\nCBB,315,Plattsburgh Cardinals,-1.6,\nCBB,316,Albion Britons,-1.7,\nCBB,317,Thomas College Terriers,-1.7,\nCBB,318,Queens University Royals,-1.7,\nCBB,319,Penn State Schuylkill Nittany Lions,-1.7,\nCBB,320,Saint Vincent Bearcats,-1.7,\nCBB,321,Colorado College Tigers,-1.7,\nCBB,322,Miami (OH) Middletown ThunderHawks,-1.7,\nCBB,323,King's Monarchs,-1.7,\nCBB,324,Tougaloo Bulldogs,-1.7,\nCBB,325,East Carolina Pirates,-1.7,\nCBB,326,City College NY Beavers,-1.7,\nCBB,327,Andrew Fighting Tigers,-1.7,\nCBB,328,Eastern Washington Eagles,-1.7,\nCBB,329,Central Bible Saints,-1.7,\nCBB,330,Adams State Grizzlies,-1.7,\nCBB,331,South Alabama Jaguars,-1.7,\nCBB,332,Crookston (MN) Golden Eagles,-1.8,\nCBB,333,Oklahoma City Okies,-1.8,\nCBB,334,Millsaps Majors,-1.8,\nCBB,335,Coast Guard Bears,-1.8,\nCBB,336,Cal State Northridge Matadors,-1.8,\nCBB,337,Abraham Baldwin Agricultural Stallions,-1.8,\nCBB,338,Allen Yellow Jackets,-1.8,\nCBB,339,Southwestern Christian U Eagles,-1.8,\nCBB,340,Berry Vikings,-1.8,\nCBB,341,Oakwood Ambassadors,-1.8,\nCBB,342,William & Mary Tribe,-1.8,\nCBB,343,Curry Colonels,-1.8,\nCBB,344,Calumet St. Joseph Crimson Wave,-1.8,\nCBB,345,Northwest University Eagles,-1.9,\nCBB,346,Saint Mary of the Woods Pomeroys,-1.9,\nCBB,347,Champion Christian Tigers,-1.9,\nCBB,348,George Fox Bruins,-1.9,\nCBB,349,Penn State Shenango Nittany Lions,-1.9,\nCBB,350,Wright State-Lake Lakers,-1.9,\nCBB,351,Corban Warriors,-1.9,\nCBB,352,Mercer Bears,-1.9,\nCBB,353,Dartmouth Big Green,-1.9,\nCBB,354,Mount St Mary Knights,-1.9,\nCBB,355,Penn State Lehigh Valley Nittany Lions,-1.9,\nCBB,356,Voorhees Tigers,-1.9,\nCBB,357,Brescia Bearcats,-2.0,\nCBB,358,Keuka Storm,-2.0,\nCBB,359,Central College Dutch,-2.0,\nCBB,360,McDaniel Green Terror,-2.0,\nCBB,361,Mississippi U for Women Owls,-2.0,\nCBB,362,Emmanuel (MA) Lions,-2.0,\nCBB,363,Regent Regent Royals,-2.0,\nCBB,364,Northern New Mexico Eagles,-2.1,\nCBB,365,Midway Eagles,-2.1,\nCBB,366,Siena Saints,-2.1,\nCBB,367,Notre Dame (MD) Gators,-2.1,\nCBB,368,Milwaukee Panthers,-2.1,\nCBB,369,Elmira Soaring Eagles,-2.1,\nCBB,370,Mount Marty Lancers,-2.1,\nCBB,371,Dallas Christian Crusaders,-2.1,\nCBB,372,Doane Tigers,-2.2,\nCBB,373,Central Penn Knights,-2.2,\nCBB,374,UC Davis Aggies,-2.2,\nCBB,375,Sam Houston Bearkats,-2.2,\nCBB,376,Eastern Michigan Eagles,-2.2,\nCBB,377,Northern Illinois Huskies,-2.2,\nCBB,378,Bryant & Stratton-Albany Bobcats,-2.2,\nCBB,379,Houston Christian Huskies,-2.3,\nCBB,380,Washington Maryland Shoremen,-2.3,\nCBB,381,West Coast Baptist Eagles,-2.3,\nCBB,382,Marist Red Foxes,-2.3,\nCBB,383,Chicago Maroons,-2.3,\nCBB,384,SUNY Old Westbury Panthers,-2.3,\nCBB,385,Dillard Blue Devils,-2.3,\nCBB,386,Simpson (IA) Storm,-2.3,\nCBB,387,Shenandoah Hornets,-2.3,\nCBB,388,Texas A&M-Corpus Christi Islanders,-2.3,\nCBB,389,East West Phantoms,-2.3,\nCBB,390,Fisk Bulldogs,-2.4,\nCBB,391,Bob Jones Bruins,-2.4,\nCBB,392,Georgia State Panthers,-2.4,\nCBB,393,Boston University Terriers,-2.5,\nCBB,394,Capital Crusaders,-2.6,\nCBB,395,Earlham Quakers,-2.6,\nCBB,396,Hiram Terriers,-2.6,\nCBB,397,Eastern Kentucky Colonels,-2.6,\nCBB,398,Erskine Flying Fleet,-2.7,\nCBB,399,Quinnipiac Bobcats,-2.7,\nCBB,400,LaGrange Panthers,-2.7,\nCBB,401,East Texas A&M Lions,-2.7,\nCBB,402,William Paterson Pioneers,-2.8,\nCBB,403,Louisiana Tech Bulldogs,-2.8,\nCBB,404,Rice Owls,-2.8,\nCBB,405,Blackburn Beavers,-2.8,\nCBB,406,Purdue Fort Wayne Mastodons,-2.8,\nCBB,407,Bethune-Cookman Wildcats,-2.9,\nCBB,408,Iona Gaels,-3.0,\nCBB,409,Cheyney (PA) Wolves,-3.0,\nCBB,410,UMass Lowell River Hawks,-3.0,\nCBB,411,San Jos\u00e9 State Spartans,-3.0,\nCBB,412,Robert Morris Colonials,-3.0,\nCBB,413,Tarleton State Texans,-3.0,\nCBB,414,UT Arlington Mavericks,-3.1,\nCBB,415,Youngstown State Penguins,-3.1,\nCBB,416,Northern Colorado Bears,-3.1,\nCBB,417,Grace (CA) Talons,-3.1,\nCBB,418,New Mexico State Aggies,-3.2,\nCBB,419,UTEP Miners,-3.3,\nCBB,420,Tennessee Tech Golden Eagles,-3.3,\nCBB,421,New Orleans Privateers,-3.3,\nCBB,422,Hampton Pirates,-3.4,\nCBB,423,Samford Bulldogs,-3.4,\nCBB,424,Northeastern Huskies,-3.4,\nCBB,425,Middle Tennessee Blue Raiders,-3.4,\nCBB,426,UC Riverside Highlanders,-3.4,\nCBB,427,Fresno State Bulldogs,-3.4,\nCBB,428,UMBC Retrievers,-3.6,\nCBB,429,Lincoln (CA) Oaklanders,-3.6,\nCBB,430,Southeast Missouri State Redhawks,-3.7,\nCBB,431,Jacksonville State Gamecocks,-3.7,\nCBB,432,West Florida Argonauts,-3.8,\nCBB,433,Virginia Lynchburg Dragons,-3.8,\nCBB,434,Oral Roberts Golden Eagles,-3.8,\nCBB,435,Idaho Vandals,-3.9,\nCBB,436,Southern Miss Golden Eagles,-3.9,\nCBB,437,Long Island University Sharks,-4.0,\nCBB,438,Presbyterian Blue Hose,-4.1,\nCBB,439,Misericordia Cougars,-4.1,\nCBB,440,Bethesda Flames,-4.1,\nCBB,441,Little Rock Trojans,-4.3,\nCBB,442,IU Indianapolis Jaguars,-4.3,\nCBB,443,Indiana State Sycamores,-4.4,\nCBB,444,Northern Kentucky Norse,-4.4,\nCBB,445,Jacksonville Dolphins,-4.6,\nCBB,446,Utah Tech Trailblazers,-4.6,\nCBB,447,La Salle Explorers,-4.6,\nCBB,448,Denver Pioneers,-4.6,\nCBB,449,Drexel Dragons,-4.8,\nCBB,450,UT Rio Grande Valley Vaqueros,-4.9,\nCBB,451,Nicholls Colonels,-4.9,\nCBB,452,Winthrop Eagles,-4.9,\nCBB,453,Troy Trojans,-4.9,\nCBB,454,Cleveland State Vikings,-5.0,\nCBB,455,UNC Greensboro Spartans,-5.0,\nCBB,456,Oakland Golden Grizzlies,-5.0,\nCBB,457,The Citadel Bulldogs,-5.1,\nCBB,458,Coastal Carolina Chanticleers,-5.1,\nCBB,459,Long Beach State Beach,-5.2,\nCBB,460,North Carolina A&T Aggies,-5.2,\nCBB,461,UNC Asheville Bulldogs,-5.4,\nCBB,462,Kansas City Roos,-5.4,\nCBB,463,Ball State Cardinals,-5.4,\nCBB,464,SIU Edwardsville Cougars,-5.4,\nCBB,465,Southern Utah Thunderbirds,-5.5,\nCBB,466,Radford Highlanders,-5.5,\nCBB,467,Charleston Southern Buccaneers,-5.7,\nCBB,468,Brown Bears,-5.8,\nCBB,469,Lafayette Leopards,-5.8,\nCBB,470,North Alabama Lions,-5.8,\nCBB,471,Sacramento State Hornets,-5.9,\nCBB,472,Sacred Heart Pioneers,-5.9,\nCBB,473,Fairfield Stags,-6.0,\nCBB,474,Louisiana Ragin' Cajuns,-6.0,\nCBB,475,New Hampshire Wildcats,-6.1,\nCBB,476,Morgan State Bears,-6.1,\nCBB,477,Idaho State Bengals,-6.1,\nCBB,478,Central Connecticut Blue Devils,-6.1,\nCBB,479,Army Black Knights,-6.1,\nCBB,480,Mercyhurst Lakers,-6.2,\nCBB,481,VMI Keydets,-6.3,\nCBB,482,UTSA Roadrunners,-6.3,\nCBB,483,Air Force Falcons,-6.4,\nCBB,484,Weber State Wildcats,-6.5,\nCBB,485,Stetson Hatters,-6.6,\nCBB,486,Northwestern State Demons,-6.6,\nCBB,487,Mount St. Mary's Mountaineers,-6.7,\nCBB,488,South Carolina State Bulldogs,-6.8,\nCBB,489,Delaware Blue Hens,-6.8,\nCBB,490,South Dakota Coyotes,-7.0,\nCBB,491,Jackson State Tigers,-7.0,\nCBB,492,Loyola Maryland Greyhounds,-7.1,\nCBB,493,Alabama A&M Bulldogs,-7.1,\nCBB,494,Lehigh Mountain Hawks,-7.1,\nCBB,495,Navy Midshipmen,-7.2,\nCBB,496,Saint Peter's Peacocks,-7.4,\nCBB,497,Southern Jaguars,-7.4,\nCBB,498,Georgia Southern Eagles,-7.4,\nCBB,499,Lindenwood Lions,-7.5,\nCBB,500,SE Louisiana Lions,-7.5,\nCBB,501,UAlbany Great Danes,-7.6,\nCBB,502,Southern Indiana Screaming Eagles,-7.7,\nCBB,503,Evansville Purple Aces,-7.8,\nCBB,504,Northern Arizona Lumberjacks,-7.9,\nCBB,505,South Carolina Upstate Spartans,-8.1,\nCBB,506,Binghamton Bearcats,-8.1,\nCBB,507,North Dakota Fighting Hawks,-8.1,\nCBB,508,Abilene Christian Wildcats,-8.2,\nCBB,509,West Georgia Wolves,-8.3,\nCBB,510,Omaha Mavericks,-8.4,\nCBB,511,Bellarmine Knights,-8.4,\nCBB,512,Fairleigh Dickinson Knights,-8.6,\nCBB,513,Manhattan Jaspers,-8.6,\nCBB,514,California Baptist Lancers,-8.8,\nCBB,515,North Carolina Central Eagles,-8.8,\nCBB,516,Le Moyne Dolphins,-8.9,\nCBB,517,Grambling Tigers,-9.0,\nCBB,518,Morehead State Eagles,-9.0,\nCBB,519,Alabama State Hornets,-9.2,\nCBB,520,North Florida Ospreys,-9.2,\nCBB,521,Niagara Purple Eagles,-9.3,\nCBB,522,Bryant Bulldogs,-9.5,\nCBB,523,Wagner Seahawks,-9.5,\nCBB,524,Norfolk State Spartans,-9.6,\nCBB,525,Delaware State Hornets,-9.7,\nCBB,526,Texas Southern Tigers,-9.7,\nCBB,527,Incarnate Word Cardinals,-9.7,\nCBB,528,Stonehill Skyhawks,-9.8,\nCBB,529,Prairie View A&M Panthers,-9.9,\nCBB,530,Coppin State Eagles,-10.2,\nCBB,531,Maine Black Bears,-10.4,\nCBB,532,Canisius Golden Griffins,-10.8,\nCBB,533,New Haven Chargers,-11.1,\nCBB,534,Chicago State Cougars,-11.2,\nCBB,535,Western Illinois Leathernecks,-11.3,\nCBB,536,Rider Broncs,-11.4,\nCBB,537,Eastern Illinois Panthers,-11.7,\nCBB,538,UL Monroe Warhawks,-11.8,\nCBB,539,NJIT Highlanders,-12.1,\nCBB,540,Gardner-Webb Runnin' Bulldogs,-12.3,\nCBB,541,Alcorn State Braves,-12.8,\nCBB,542,Bucknell Bison,-12.9,\nCBB,543,Detroit Mercy Titans,-12.9,\nCBB,544,Maryland Eastern Shore Hawks,-13.2,\nCBB,545,Florida A&M Rattlers,-13.5,\nCBB,546,Holy Cross Crusaders,-14.1,\nCBB,547,Mississippi Valley State Delta Devils,-16.9,\nCBB,548,Arkansas-Pine Bluff Golden Lions,-17.6,\n";
+var NFL_NAMES = {ARI:'Arizona Cardinals',ATL:'Atlanta Falcons',BAL:'Baltimore Ravens',BUF:'Buffalo Bills',CAR:'Carolina Panthers',CHI:'Chicago Bears',CIN:'Cincinnati Bengals',CLE:'Cleveland Browns',DAL:'Dallas Cowboys',DEN:'Denver Broncos',DET:'Detroit Lions',GB:'Green Bay Packers',HOU:'Houston Texans',IND:'Indianapolis Colts',JAX:'Jacksonville Jaguars',KC:'Kansas City Chiefs',LA:'Los Angeles Rams',LAC:'Los Angeles Chargers',LV:'Las Vegas Raiders',MIA:'Miami Dolphins',MIN:'Minnesota Vikings',NE:'New England Patriots',NO:'New Orleans Saints',NYG:'New York Giants',NYJ:'New York Jets',PHI:'Philadelphia Eagles',PIT:'Pittsburgh Steelers',SEA:'Seattle Seahawks',SF:'San Francisco 49ers',TB:'Tampa Bay Buccaneers',TEN:'Tennessee Titans',WAS:'Washington Commanders'};
+var NBA_NAMES = {ATL:'Atlanta Hawks',BOS:'Boston Celtics',BKN:'Brooklyn Nets',CHA:'Charlotte Hornets',CHI:'Chicago Bulls',CLE:'Cleveland Cavaliers',DAL:'Dallas Mavericks',DEN:'Denver Nuggets',DET:'Detroit Pistons',GS:'Golden State Warriors',HOU:'Houston Rockets',IND:'Indiana Pacers',LAC:'LA Clippers',LAL:'Los Angeles Lakers',MEM:'Memphis Grizzlies',MIA:'Miami Heat',MIL:'Milwaukee Bucks',MIN:'Minnesota Timberwolves',NO:'New Orleans Pelicans',NY:'New York Knicks',OKC:'Oklahoma City Thunder',ORL:'Orlando Magic',PHI:'Philadelphia 76ers',PHX:'Phoenix Suns',POR:'Portland Trail Blazers',SAC:'Sacramento Kings',SA:'San Antonio Spurs',TOR:'Toronto Raptors',UTAH:'Utah Jazz',WSH:'Washington Wizards'};
+// Per sport: label, std. dev. of final margin around the line (for win chance), and the edge rule from the backtests
+var SPORTS = {
+  NFL: { name:'NFL', sd:13.5, flag:1.5, proven:false, edge:'Field' },
+  CFB: { name:'College football', sd:15.5, flag:5, proven:false, edge:'Field' },
+  NBA: { name:'NBA', sd:12, flag:5, proven:false, edge:'Court' },
+  CBB: { name:'College basketball', sd:10.5, flag:5, proven:true, edge:'Court' }
+};
+var D = {}, st = { sport:'CBB', home:{}, away:{}, sort:{k:'rank',d:1}, v:{} };
+var $ = function (id) { return document.getElementById(id); };
+
+function parseCsv(t) {
+  var rows = [], row = [], f = '', q = false;
+  for (var i = 0; i < t.length; i++) {
+    var c = t[i];
+    if (q) { if (c === '"') { if (t[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true; else if (c === ',') { row.push(f); f = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+    else f += c;
+  }
+  if (f !== '' || row.length) { row.push(f); rows.push(row); }
+  return rows;
+}
+function load(csv) {
+  var R = parseCsv(csv), out = {};
+  if (!R.length || R[0][0] !== 'sport') return null;
+  R.slice(1).forEach(function (r) {
+    if (r[0] === 'META') { out[r[1]] = out[r[1]] || { teams: [] }; out[r[1]].hfa = Number(r[2]); out[r[1]].upd = r[3]; return; }
+    if (!SPORTS[r[0]] || !r[2] || r[2] === 'TBD') return;
+    (out[r[0]] = out[r[0]] || { teams: [] }).teams.push({ rank: Number(r[1]), team: r[2], power: Number(r[3]), note: r[4] || '' });
+  });
+  return Object.keys(out).length ? out : null;
+}
+function disp(t) { return st.sport === 'NFL' ? (NFL_NAMES[t] || t) : st.sport === 'NBA' ? (NBA_NAMES[t] || t) : t; }
+function fmtPt(x) { x = Math.round(x * 2) / 2; return x === 0 ? 'PK' : (x > 0 ? '+' : '') + x; }
+function fmtMl(p) { if (p <= 0 || p >= 1) return '–'; var d = 1 / p; return d >= 2 ? '+' + Math.round((d - 1) * 100) : String(Math.round(-100 / (d - 1))); }
+function Phi(z) { var t = 1 / (1 + 0.2316419 * Math.abs(z)), d = 0.3989423 * Math.exp(-z * z / 2),
+  p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); return z > 0 ? 1 - p : p; }
+function num(v) { var n = Number(String(v).replace(/[^\d.+\-]/g, '')); return String(v).trim() === '' || isNaN(n) ? null : n; }
+
+// Game variables per sport. kind: toggle (adds pts to home margin when on) or step (team adjustment in points).
+function varDefs(s) {
+  var common = [
+    { id:'neutral', kind:'toggle', label:'Neutral site', hint:'No home edge' },
+    { id:'hfa', kind:'step', label:'Home edge (pts)', hint:'Model default for this sport', step:0.5, def: D[s].hfa },
+    { id:'hAdj', kind:'step', label:'Home team adjustment', hint:'Injuries, QB change, news (+ = better)', step:0.5, def:0 },
+    { id:'aAdj', kind:'step', label:'Away team adjustment', hint:'Injuries, QB change, news (+ = better)', step:0.5, def:0 }
+  ];
+  var extra = {
+    NFL: [ { id:'hBye', kind:'toggle', label:'Home team off a bye', hint:'+0.7 (backtested)', pts:0.7 },
+           { id:'aBye', kind:'toggle', label:'Away team off a bye', hint:'−0.7 to home', pts:-0.7 },
+           { id:'west', kind:'toggle', label:'West Coast away team, 1 PM ET start', hint:'+0.4 to home', pts:0.4 } ],
+    NBA: [ { id:'hB2b', kind:'toggle', label:'Home team on a back-to-back', hint:'−2 to home', pts:-2 },
+           { id:'aB2b', kind:'toggle', label:'Away team on a back-to-back', hint:'+2 to home', pts:2 } ],
+    CFB: [],
+    CBB: [ { id:'kp', kind:'text', label:'KenPom line (home team)', hint:'Blended 50/50 like the model, e.g. -6' } ]
+  };
+  return common.concat(extra[s] || []);
+}
+function buildVars() {
+  var defs = varDefs(st.sport), box = $('vars'); box.innerHTML = ''; st.v = {};
+  defs.forEach(function (d) {
+    var row = document.createElement('div'); row.className = 'row';
+    if (d.kind === 'toggle') {
+      st.v[d.id] = false;
+      row.innerHTML = '<label class="toggle" for="v_' + d.id + '"><input type="checkbox" id="v_' + d.id + '"><span>' + d.label + '<span class="hint">' + d.hint + '</span></span></label><span></span>';
+      box.appendChild(row); $('v_' + d.id).onchange = function () { st.v[d.id] = this.checked; calc(); };
+    } else if (d.kind === 'step') {
+      st.v[d.id] = d.def;
+      row.innerHTML = '<span>' + d.label + '<span class="hint">' + d.hint + '</span></span><div class="stepper"><button type="button" aria-label="' + d.label + ' down">−</button><output id="v_' + d.id + '"></output><button type="button" aria-label="' + d.label + ' up">+</button></div>';
+      box.appendChild(row);
+      var b = row.querySelectorAll('button'), show = function () { $('v_' + d.id).textContent = (st.v[d.id] > 0 && d.id !== 'hfa' ? '+' : '') + st.v[d.id]; };
+      b[0].onclick = function () { st.v[d.id] = Math.round((st.v[d.id] - d.step) * 10) / 10; show(); calc(); };
+      b[1].onclick = function () { st.v[d.id] = Math.round((st.v[d.id] + d.step) * 10) / 10; show(); calc(); };
+      show();
+    } else {
+      st.v[d.id] = '';
+      row.innerHTML = '<label for="v_' + d.id + '">' + d.label + '<span class="hint">' + d.hint + '</span></label><input type="text" id="v_' + d.id + '" inputmode="decimal" style="width:110px">';
+      box.appendChild(row); $('v_' + d.id).oninput = function () { st.v[d.id] = this.value; calc(); };
+    }
+  });
+}
+function teamBy(name) { return D[st.sport].teams.filter(function (t) { return t.team === name; })[0]; }
+function calc() {
+  var s = st.sport, h = teamBy($('home').value), a = teamBy($('away').value); if (!h || !a) return;
+  var v = st.v, defs = varDefs(s), hfa = v.neutral ? 0 : v.hfa, sit = 0, sitTxt = [];
+  defs.forEach(function (d) { if (d.kind === 'toggle' && d.pts && v[d.id]) { sit += d.pts; sitTxt.push(d.label.toLowerCase() + ' ' + (d.pts > 0 ? '+' : '') + d.pts); } });
+  var base = hfa + h.power - a.power + sit + v.hAdj - v.aAdj, m = base, kp = s === 'CBB' ? num(v.kp) : null;
+  if (kp !== null) m = 0.5 * base + 0.5 * (-kp);
+  $('homePw').textContent = 'Power ' + h.power.toFixed(1) + ' · #' + h.rank;
+  $('awayPw').textContent = 'Power ' + a.power.toFixed(1) + ' · #' + a.rank;
+  var line = -m, fav = m >= 0 ? disp(h.team) : disp(a.team);
+  $('line').textContent = Math.abs(m) < 0.25 ? 'Pick’em' : fav + ' ' + fmtPt(-Math.abs(m));
+  $('marg').textContent = (m >= 0 ? '+' : '') + m.toFixed(1);
+  var p = Phi(m / SPORTS[s].sd); $('wp').textContent = (p * 100).toFixed(0) + '%'; $('ml').textContent = fmtMl(p);
+  $('math').textContent = 'Home edge ' + hfa + ' + ' + h.power.toFixed(1) + ' − ' + a.power.toFixed(1) +
+    (sit ? ' ' + (sit > 0 ? '+ ' : '− ') + Math.abs(sit) + ' (' + sitTxt.join(', ') + ')' : '') +
+    (v.hAdj ? ' ' + (v.hAdj > 0 ? '+ ' : '− ') + Math.abs(v.hAdj) + ' home adj' : '') + (v.aAdj ? ' ' + (v.aAdj > 0 ? '− ' : '+ ') + Math.abs(v.aAdj) + ' away adj' : '') +
+    ' = ' + base.toFixed(1) + (kp !== null ? '; blended 50/50 with KenPom ' + (-kp).toFixed(1) + ' = ' + m.toFixed(1) : '') + '. Home line ' + fmtPt(line) + '.' +
+    (h.note ? ' ' + disp(h.team) + ' rating already includes ' + h.note + '.' : '') + (a.note ? ' ' + disp(a.team) + ' rating already includes ' + a.note + '.' : '');
+  bet(m, h, a);
+}
+// College basketball cover rate by gap size, 10-season backtest vs the closing line (games in each range)
+var CBB_BANDS = [[10, .668, 391], [9, .639, 122], [8, .566, 228], [7, .556, 340], [6, .534, 594], [5, .515, 1019], [4, .507, 1831], [0, .50, 0]];
+function dec(o) { return o > 0 ? 1 + o / 100 : 1 + 100 / Math.abs(o); }
+function bet(m, h, a) {
+  var mk = num($('mkt').value), pr = num($('price').value), bank = num($('bank').value), S = SPORTS[st.sport], box = $('bet');
+  if (pr === null || Math.abs(pr) < 100) pr = -110; if (!bank || bank <= 0) bank = 10000;
+  if (mk === null) { box.className = 'bet'; $('pick').textContent = 'Enter the market line'; ['gap', 'ev', 'size'].forEach(function (k) { $(k).textContent = '–'; });
+    $('evS').textContent = ''; $('sizeS').textContent = ''; $('why').textContent = 'Type the sportsbook’s spread for the home team above (for example -3.5 or +7).'; return; }
+  var gap = m + mk, g = Math.abs(gap), homeSide = gap > 0;
+  var pickTxt = homeSide ? disp(h.team) + ' ' + fmtPt(mk) : disp(a.team) + ' ' + fmtPt(-mk), unit = bank / 100, d = dec(pr), be = 1 / d;
+  $('gap').textContent = g.toFixed(1) + ' pts';
+  $('gapS').textContent = 'our line ' + fmtPt(-m) + ' vs market ' + fmtPt(mk);
+  if (S.proven) {
+    var b = CBB_BANDS.filter(function (x) { return g >= x[0]; })[0], p = b[1], ev = p * d - 1;
+    var u = g < 5 ? 0 : g >= 9 ? 3 : g >= 8 ? 2 : g >= 7 ? 1.5 : g >= 6 ? 1 : 0.5;
+    if (ev <= 0) u = 0;
+    $('ev').textContent = (ev >= 0 ? '+' : '') + (ev * 100).toFixed(1) + '%';
+    $('evS').textContent = 'covers ' + (p * 100).toFixed(1) + '%' + (b[2] ? ' (' + b[2].toLocaleString() + ' games)' : '') + ' · need ' + (be * 100).toFixed(1) + '%';
+    if (u > 0) {
+      box.className = 'bet play'; $('pick').textContent = 'Bet ' + pickTxt + ' (' + (pr > 0 ? '+' : '') + pr + ')';
+      $('size').textContent = '$' + Math.round(u * unit).toLocaleString(); $('sizeS').textContent = u + (u === 1 ? ' unit' : ' units') + ' · 1 unit = $' + Math.round(unit).toLocaleString();
+      $('why').textContent = 'College basketball gaps of ' + (g >= 10 ? '10+' : Math.floor(g) + '–' + (Math.floor(g) + 1)) + ' points covered ' + (p * 100).toFixed(1) + '% against the closing line over 10 seasons. Size grows with the gap: 5–6 pts 0.5u, 6–7 1u, 7–8 1.5u, 8–9 2u, 9+ 3u (max).' + (g < 6 ? ' Gaps under 6 points have been close to break-even, so this is the smallest size.' : '');
+    } else {
+      box.className = 'bet'; $('pick').textContent = 'No bet (lean ' + pickTxt + ')'; $('size').textContent = '$0'; $('sizeS').textContent = g < 5 ? 'gap under 5 pts' : 'price too high';
+      $('why').textContent = g < 5 ? 'The model only bets college basketball gaps of 5+ points. Smaller gaps have covered about 50% over 10 seasons, which loses money at normal prices.' : 'The backtested cover rate doesn’t beat this price. Look for a better number.';
+    }
+  } else {
+    var pm = Phi(g / S.sd), evm = pm * d - 1;
+    box.className = g >= S.flag ? 'bet lean' : 'bet'; $('pick').textContent = (g >= S.flag ? 'Lean ' : 'No bet (lean ') + pickTxt + (g >= S.flag ? '' : ')');
+    $('ev').textContent = (evm >= 0 ? '+' : '') + (evm * 100).toFixed(1) + '%'; $('evS').textContent = 'model-implied, not proven';
+    var tu = evm < 0.02 ? 0 : evm < 0.04 ? 0.5 : evm < 0.06 ? 1 : evm < 0.08 ? 1.5 : evm < 0.10 ? 2 : 3;
+    $('size').textContent = tu ? tu + (tu === 1 ? ' unit' : ' units') : '0 units';
+    $('sizeS').textContent = tu ? 'theoretical · $' + Math.round(tu * unit).toLocaleString() : 'theoretical · EV under 2%';
+    $('why').innerHTML = 'Theoretical size from the model-implied EV: under 2% = 0, 2–4% 0.5u, 4–6% 1u, 6–8% 1.5u, 8–10% 2u, 10%+ 3u (max).<br><b>' + S.name + ' gaps haven’t beaten the closing line in our backtests</b>, so the EV shown is what the ratings imply, not a tested edge. Track it on paper; no real money until the sport proves itself.';
+  }
+}
+function fillSelects() {
+  var T = D[st.sport].teams.slice().sort(function (a, b) { return disp(a.team) < disp(b.team) ? -1 : 1; });
+  ['home', 'away'].forEach(function (k) {
+    var sel = $(k); sel.innerHTML = '';
+    T.forEach(function (t) { var o = document.createElement('option'); o.value = t.team; o.textContent = disp(t.team) + ' (' + t.power.toFixed(1) + ')'; sel.appendChild(o); });
+  });
+  var byRank = D[st.sport].teams.slice().sort(function (a, b) { return a.rank - b.rank; });
+  $('home').value = st.home[st.sport] || byRank[0].team; $('away').value = st.away[st.sport] || byRank[1].team;
+}
+function board() {
+  var q = $('q').value.trim().toLowerCase(), T = D[st.sport].teams.filter(function (t) { return !q || disp(t.team).toLowerCase().indexOf(q) >= 0 || t.team.toLowerCase().indexOf(q) >= 0; });
+  var k = st.sort.k, dir = st.sort.d;
+  T.sort(function (a, b) { var x = k === 'team' ? disp(a.team) : a[k], y = k === 'team' ? disp(b.team) : b[k]; return (x < y ? -1 : x > y ? 1 : 0) * dir; });
+  var mx = Math.max.apply(null, D[st.sport].teams.map(function (t) { return Math.abs(t.power); })) || 1;
+  $('tb').innerHTML = T.map(function (t) {
+    var w = Math.round(Math.abs(t.power) / mx * 100), hon = $('home').value === t.team, aon = $('away').value === t.team;
+    return '<tr><td>' + t.rank + '</td><td>' + disp(t.team) + (t.note ? '<div class="adjnote">' + t.note + '</div>' : '') + '</td><td class="n"><b>' + t.power.toFixed(1) + '</b></td>' +
+      '<td style="width:80px"><div class="bar' + (t.power < 0 ? ' neg' : '') + '" style="width:' + w + '%"></div></td>' +
+      '<td><div class="pick"><button type="button" data-t="' + encodeURIComponent(t.team) + '" data-s="away" class="' + (aon ? 'on' : '') + '">Away</button><button type="button" data-t="' + encodeURIComponent(t.team) + '" data-s="home" class="' + (hon ? 'on' : '') + '">Home</button></div></td></tr>';
+  }).join('');
+  $('count').textContent = T.length + ' teams';
+}
+function setSport(s) {
+  st.sport = s;
+  [].forEach.call($('tabs').children, function (b) { b.setAttribute('aria-selected', b.dataset.s === s ? 'true' : 'false'); });
+  var M = D[s]; $('asof').textContent = SPORTS[s].name + ' ratings updated ' + (M.upd || '?') + ' · home ' + SPORTS[s].edge.toLowerCase() + ' edge ' + M.hfa + ' pts';
+  fillSelects(); buildVars(); $('mkt').value = ''; board(); calc();
+}
+function init(data, live, when) {
+  D = data;
+  $('src').textContent = live ? 'Updated daily' : 'Snapshot from Nov 16';
+  $('src').className = live ? 'chip' : 'chip warn';
+  $('tabs').innerHTML = '';
+  ['NFL', 'CFB', 'NBA', 'CBB'].filter(function (s) { return D[s] && D[s].teams.length; }).forEach(function (s) {
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'tab'); b.dataset.s = s; b.textContent = s; b.title = SPORTS[s].name;
+    b.onclick = function () { setSport(s); }; $('tabs').appendChild(b);
+  });
+  setSport(D[st.sport] ? st.sport : 'NFL');
+}
+$('home').onchange = function () { st.home[st.sport] = this.value; board(); calc(); };
+$('away').onchange = function () { st.away[st.sport] = this.value; board(); calc(); };
+$('swap').onclick = function () { var h = $('home').value; $('home').value = $('away').value; $('away').value = h; st.home[st.sport] = $('home').value; st.away[st.sport] = $('away').value; board(); calc(); };
+$('mkt').oninput = calc; $('price').oninput = calc; $('bank').oninput = function () { try { localStorage.setItem('prBank', this.value); } catch (e) {} calc(); };
+try { var sb = localStorage.getItem('prBank'); if (sb) $('bank').value = sb; } catch (e) {}
+$('q').oninput = board;
+document.querySelector('thead').onclick = function (e) { var k = e.target.dataset && e.target.dataset.k; if (!k) return; st.sort = { k: k, d: st.sort.k === k ? -st.sort.d : (k === 'power' ? -1 : 1) }; board(); };
+$('tb').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; var t = decodeURIComponent(b.dataset.t);
+  $(b.dataset.s).value = t; st[b.dataset.s][st.sport] = t; board(); calc(); };
+
+init(load(SNAP), false);
+
+// Data: the site's own data file, refreshed daily.
+
+function findCsv(x, depth) {
+  if (depth > 6 || x === null || x === undefined) return null;
+  if (typeof x === 'string') {
+    if (/^﻿?sport,rank,team/.test(x)) return x.replace(/^﻿/, '');
+    if (x.length > 200 && /^[A-Za-z0-9+/=\s]+$/.test(x)) { try { var t = decodeURIComponent(escape(atob(x.replace(/\s/g, '')))); if (/^﻿?sport,rank,team/.test(t)) return t.replace(/^﻿/, ''); } catch (e) {} }
+    var i = x.indexOf('sport,rank,team'); if (i >= 0 && i < 400) return x.slice(i);
+    return null;
+  }
+  if (typeof x === 'object') { for (var k in x) { var r = findCsv(x[k], depth + 1); if (r) return r; } }
+  return null;
+}
+(async function () {
+  try {
+    var csv = await fetch('data/ratings.csv', { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : null; }); csv = csv && csv.replace(/^\uFEFF/, ''), data = csv && load(csv);
+    if (data) init(data, true, new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }));
+  } catch (e) { $('src').textContent = 'Snapshot'; }
+})();
+</script>
+</body>
+</html>

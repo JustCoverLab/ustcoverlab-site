@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Just Cover Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1115;--card:#181b21;--card2:#20242c;--line:#2b3039;--ink:#f3f4f6;--muted:#9aa0aa;--faint:#6b7280;--g:#22c55e;--r:#f87171;--y:#fbbf24;--b:#60a5fa;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:var(--g)}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 56px;display:grid;gap:18px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;border:3px solid var(--g);border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px}
+h1{margin:0;font-size:28px;font-weight:800;letter-spacing:-.3px}
+.tag{color:var(--muted);font-size:14px}
+.tag b{color:var(--ink)}
+.upd{font-size:12px;color:var(--faint)}
+nav.tabs{display:flex;flex-wrap:wrap;gap:6px;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0}
+nav.tabs a{font-size:14px;font-weight:600;color:var(--muted);text-decoration:none;padding:7px 12px;border-radius:999px;border:1px solid var(--line)}
+nav.tabs a[aria-current="page"]{background:var(--g);color:#06140b;border-color:var(--g)}
+section{display:none;gap:16px}
+section.on{display:grid}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+.hero{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;align-items:center}
+.big .k{font-size:13px;color:var(--muted)}
+.big .v{font-size:52px;font-weight:800;letter-spacing:-1px;line-height:1.05;font-variant-numeric:tabular-nums}
+.big .s{color:var(--muted);font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.tile{background:var(--card2);border-radius:12px;padding:12px 14px}
+.tile .k{font-size:12px;color:var(--muted)}
+.tile .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12px;color:var(--faint)}
+.pos{color:var(--g)} .neg{color:var(--r)}
+h2{margin:0 0 4px;font-size:18px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto}
+.tip{position:absolute;pointer-events:none;background:#0b0d10;border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:12px;white-space:nowrap;display:none}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:8px 6px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card)}
+td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n,th.n{text-align:right}
+.res{font-weight:700;font-size:12px;border-radius:6px;padding:2px 7px}
+.res.W{background:#123d24;color:var(--g)} .res.L{background:#3d1616;color:var(--r)} .res.P{background:#2a2e36;color:var(--muted)} .res.O{background:#3d3212;color:var(--y)}
+.scroll{max-height:560px;overflow:auto;border-radius:10px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+select,input{font:inherit;font-size:13px;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.tools{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.tool{display:block;text-decoration:none;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:16px}
+.tool:hover{border-color:var(--g)}
+.tool b{display:block;font-size:16px;margin-bottom:4px}
+.tool span{color:var(--muted);font-size:13px}
+.note{background:var(--card2);border-left:3px solid var(--g);border-radius:10px;padding:14px 16px}
+.note.r{border-color:var(--r)} .note.y{border-color:var(--y)}
+.note h3{margin:0 0 4px;font-size:15px}
+.note p{margin:0;color:var(--muted);font-size:14px}
+.note .verdict{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+ol.steps{margin:0;padding-left:20px;display:grid;gap:8px;color:var(--muted)} ol.steps b{color:var(--ink)}
+footer{color:var(--faint);font-size:12px;text-align:center;line-height:1.7}
+.more{text-align:center;margin-top:10px}
+button{font:inherit;font-size:13px;font-weight:600;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:7px 14px;cursor:pointer}
+button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--g);outline-offset:2px}
+@media (max-width:760px){.hero,.grid2,.tools{grid-template-columns:1fr}.big .v{font-size:42px}.hide-sm{display:none}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="brand"><div class="logo">JC</div><div><h1>Just Cover Lab</h1><div class="tag"><b>Win / Lose / Draw &lt; Cover.</b> A crowd-built betting model, tested in public.</div></div></div>
+    <div class="upd" id="upd">Loading…</div>
+  </header>
+  <nav class="tabs" aria-label="Sections">
+    <a href="#record">The Record</a><a href="#bets">Every Bet</a><a href="#props">Props</a><a href="#lab">Lab Notes</a><a href="#tools">Tools</a><a href="#how">How It Works</a>
+  </nav>
+
+  <section id="s-record">
+    <div class="card hero">
+      <div class="big">
+        <div class="k">Paper bankroll (started at <span id="start"></span>)</div>
+        <div class="v" id="bank">–</div>
+        <div class="s" id="bankS"></div>
+      </div>
+      <div class="tiles" id="tiles"></div>
+    </div>
+    <div class="card">
+      <h2>Running total</h2>
+      <p class="sub">Paper bankroll after each day of graded model bets. Every bet is logged with a timestamp before the game starts.</p>
+      <div class="chart" id="chart"></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h2>Best bets</h2><p class="sub">The model's highest-confidence subset of the bets above.</p><div class="tiles" id="best"></div></div>
+      <div class="card"><h2>Player props</h2><p class="sub">Flat 1 unit per prop, real sportsbook prices only.</p><div class="tiles" id="propT"></div></div>
+    </div>
+    <div class="card">
+      <h2>Everything else we've tried</h2>
+      <p class="sub">Side experiments, shown win or lose. Losing ideas stay on the board.</p>
+      <table><thead><tr><th>Bet type</th><th class="n">Record</th><th class="n">Open</th><th class="n">Staked</th><th class="n">Profit</th><th class="n">ROI</th></tr></thead><tbody id="other"></tbody></table>
+    </div>
+  </section>
+
+  <section id="s-bets">
+    <div class="card">
+      <h2>Every bet</h2>
+      <p class="sub">Every model bet, newest first, at the price and app we'd have bet. CLV = how much better our price was than the closing line.</p>
+      <div class="filters"><select id="fSport" aria-label="Sport"></select><select id="fRes" aria-label="Result"><option value="">All results</option><option value="W">Wins</option><option value="L">Losses</option><option value="O">Open</option></select></div>
+      <div class="scroll"><table><thead><tr><th>Date</th><th>Pick</th><th class="hide-sm">Game</th><th>App</th><th class="n">Odds</th><th class="n">EV</th><th class="n">Stake</th><th>Result</th><th class="n">Profit</th><th class="n hide-sm">CLV</th></tr></thead><tbody id="betRows"></tbody></table></div>
+      <div class="more"><button type="button" id="betMore">Show more</button></div>
+    </div>
+  </section>
+
+  <section id="s-props">
+    <div class="card">
+      <h2>Props by sport and side</h2>
+      <p class="sub">Flat 1 unit each. NFL props are Unders only since Nov 18, because Overs lost.</p>
+      <table><thead><tr><th>Group</th><th class="n">Record</th><th class="n">Units</th><th class="n">ROI</th></tr></thead><tbody id="propBy"></tbody></table>
+    </div>
+    <div class="card">
+      <h2>Every prop</h2>
+      <div class="filters"><select id="pSport" aria-label="Sport"></select><select id="pRes" aria-label="Result"><option value="">All results</option><option value="W">Wins</option><option value="L">Losses</option><option value="O">Open</option></select><input type="search" id="pQ" placeholder="Search player" aria-label="Search player"></div>
+      <div class="scroll"><table><thead><tr><th>Date</th><th>Player</th><th>Prop</th><th>App</th><th class="n">Odds</th><th class="n">EV</th><th class="n">Final</th><th>Result</th><th class="n">Units</th></tr></thead><tbody id="propRows"></tbody></table></div>
+      <div class="more"><button type="button" id="propMore">Show more</button></div>
+    </div>
+  </section>
+
+  <section id="s-lab">
+    <div class="card">
+      <h2>Lab Notes</h2>
+      <p class="sub">Ideas we've tested against real data, whatever the answer was. Got a theory? Pitch it to <a href="https://x.com/JustCoverLab">@JustCoverLab</a> on X (x.com/JustCoverLab) and we'll test it.</p>
+      <div style="display:grid;gap:12px">
+        <div class="note r"><span class="verdict neg">No edge</span><h3>NBA back-to-backs and travel</h3><p>4,138 games. Teams on a back-to-back are about 2 points worse, but the market already prices that in. Betting against tired teams didn't beat the line.</p></div>
+        <div class="note"><span class="verdict pos">Edge (so far)</span><h3>Only bet 3%+ edges</h3><p>Bets under 3% EV lost money (−2.4%). Bets at 3% or more returned +15.1%. The model now skips anything under 3%, and needs 4% for bets placed 8+ hours early.</p></div>
+        <div class="note"><span class="verdict pos">Edge (so far)</span><h3>Bet close to game time</h3><p>Bets placed under 3 hours before start beat the closing line 87% of the time, vs 46% for bets 8–24 hours out. Late news moves lines toward us when we wait.</p></div>
+        <div class="note y"><span class="verdict" style="color:var(--y)">Promising, small sample</span><h3>Props when a teammate is newly out</h3><p>NBA player props right after a teammate is ruled out hit 62% (fair odds said 50%), +29.6% ROI. Only 90 props from about 15 games, so it's being tracked, not trusted yet.</p></div>
+        <div class="note r"><span class="verdict neg">Cut</span><h3>NFL player prop Overs</h3><p>NFL Overs returned −27% while Unders returned +25%. The model now bets NFL props Unders only.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s-tools">
+    <div class="card">
+      <h2>Free tools</h2>
+      <p class="sub">The same ratings and calculators the model uses, free for everyone, with data refreshed daily.</p>
+      <div class="tools">
+        <a class="tool" href="ratings.html"><b>Power Ratings Board</b><span>Every NFL, college football, NBA and college basketball team, rated in points vs an average team.</span></a>
+        <a class="tool" href="linemaker.html"><b>Line Maker</b><span>Pick any two teams and get our point spread, win chance and fair moneyline.</span></a>
+        <a class="tool" href="impact.html"><b>NFL Player Impact</b><span>How many points each player is worth to the spread, QBs included.</span></a>
+        <a class="tool" href="teaser.html"><b>Teaser Calculator</b><span>Which NFL teasers actually beat the price, checked against 3,500+ games.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="s-how">
+    <div class="card">
+      <h2>How the model works</h2>
+      <ol class="steps">
+        <li><b>Start from the sharpest price.</b> Pinnacle's odds are the best estimate of a game's true chances. We remove their built-in cut to get a fair price.</li>
+        <li><b>Shop every app.</b> We compare that fair price to the odds at the apps regular people use.</li>
+        <li><b>Only bet real edges.</b> A bet qualifies when an app's price is at least 3% better than fair.</li>
+        <li><b>Size bets small.</b> Stakes are a fraction of the Kelly formula, capped at 4% of the bankroll per game, so no single game can sink us.</li>
+        <li><b>Grade the price, not just the result.</b> The real scorecard is closing-line value: did we get a better number than where the line closed? That says whether we're right long before win-loss does.</li>
+        <li><b>Test everything in public.</b> New ideas get backtested, and the results get posted in Lab Notes, even when the idea fails.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h2>House rules</h2>
+      <ol class="steps">
+        <li><b>Every pick is timestamped</b> before the game starts. Losses stay on the board.</li>
+        <li><b>These are paper bets</b> on a $5,000 test bankroll, logged at real prices. No real money is shown here.</li>
+        <li><b>Fun bets come from a set monthly budget.</b> No 50-to-1 parlays, no chasing.</li>
+        <li><b>Not betting advice.</b> Past results don't guarantee anything.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>Just Cover Lab · <a href="https://x.com/JustCoverLab">@JustCoverLab</a> (x.com/JustCoverLab) · Win / Lose / Draw &lt; Cover<br>21+ only. Gambling problem? Call 1-800-GAMBLER. Paper results for entertainment and education, not betting advice.</footer>
+</main>
+<div class="tip" id="tip"></div>
+<script>
+var $ = function (id) { return document.getElementById(id); };
+var R = null, B = [], P = [], betN = 60, propN = 60;
+function money(v, sign) { var s = (v < 0 ? '−' : sign && v > 0 ? '+' : '') + '$' + Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }); return s; }
+function pct(v, d) { return v === null || v === undefined ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v * 100).toFixed(d === undefined ? 1 : d) + '%'; }
+function plain(v) { return v === null || v === undefined ? '–' : Math.round(v * 100) + '%'; }
+function odds(o) { return o === null || o === undefined ? '–' : (o > 0 ? '+' : '') + Math.round(o); }
+function rec(x) { return x.w + '–' + x.l + (x.p ? '–' + x.p : ''); }
+function cls(v) { return v > 0 ? 'pos' : v < 0 ? 'neg' : ''; }
+function esc(s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function fd(d) { if (!d) return ''; var p = d.split('-'); return Number(p[1]) + '/' + Number(p[2]); }
+function tile(k, v, s, c) { return '<div class="tile"><div class="k">' + k + '</div><div class="v ' + (c || '') + '">' + v + '</div><div class="s">' + (s || '') + '</div></div>'; }
+
+function route() {
+  var h = (location.hash || '#record').slice(1), ok = ['record', 'bets', 'props', 'lab', 'tools', 'how'];
+  if (ok.indexOf(h) < 0) h = 'record';
+  ok.forEach(function (k) { $('s-' + k).classList.toggle('on', k === h); });
+  document.querySelectorAll('nav.tabs a').forEach(function (a) { if (a.getAttribute('href') === '#' + h) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+}
+window.addEventListener('hashchange', route); route();
+
+function chart() {
+  var S = R.series; if (!S.length) { $('chart').innerHTML = '<p class="sub">No graded bets yet.</p>'; return; }
+  var pts = [[R.first, R.start]].concat(S.map(function (s) { return [s[0], s[2]]; }));
+  if (pts.length > 1 && pts[0][0] === pts[1][0]) pts[0][0] = 'start';
+  var W = 900, H = 280, L = 64, Rt = 16, T = 16, Bt = 36;
+  var ys = pts.map(function (p) { return p[1]; }), lo = Math.min.apply(null, ys.concat([R.start])), hi = Math.max.apply(null, ys.concat([R.start]));
+  var pad = (hi - lo) * 0.12 || 100; lo -= pad; hi += pad;
+  var X = function (i) { return L + i * (W - L - Rt) / Math.max(1, pts.length - 1); }, Y = function (v) { return T + (hi - v) / (hi - lo) * (H - T - Bt); };
+  var step = Math.pow(10, Math.floor(Math.log10((hi - lo) / 4))), tick = Math.ceil((hi - lo) / 4 / step) * step, g = '';
+  for (var v = Math.ceil(lo / tick) * tick; v <= hi; v += tick) g += '<line x1="' + L + '" x2="' + (W - Rt) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#2b3039"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" fill="#9aa0aa" font-size="12" text-anchor="end">$' + Math.round(v).toLocaleString() + '</text>';
+  g += '<line x1="' + L + '" x2="' + (W - Rt) + '" y1="' + Y(R.start) + '" y2="' + Y(R.start) + '" stroke="#6b7280" stroke-dasharray="4 4"/>';
+  var every = Math.max(1, Math.ceil(pts.length / 8));
+  pts.forEach(function (p, i) { if (i % every === 0 || i === pts.length - 1) g += '<text x="' + X(i) + '" y="' + (H - 12) + '" fill="#9aa0aa" font-size="12" text-anchor="middle">' + (p[0] === 'start' ? 'Start' : fd(p[0])) + '</text>'; });
+  var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p[1]).toFixed(1); }).join(' ');
+  var up = pts[pts.length - 1][1] >= R.start, col = up ? '#22c55e' : '#f87171';
+  var area = d + ' L' + X(pts.length - 1) + ' ' + Y(lo) + ' L' + X(0) + ' ' + Y(lo) + ' Z';
+  g += '<path d="' + area + '" fill="' + col + '" opacity=".08"/><path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2.5" stroke-linejoin="round"/>';
+  pts.forEach(function (p, i) { g += '<circle cx="' + X(i) + '" cy="' + Y(p[1]) + '" r="4" fill="' + col + '" stroke="#181b21" stroke-width="2"/>'; });
+  g += '<line id="cx" y1="' + T + '" y2="' + (H - Bt) + '" stroke="#9aa0aa" stroke-width="1" opacity="0"/>';
+  $('chart').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Paper bankroll over time">' + g + '<rect x="' + L + '" y="0" width="' + (W - L - Rt) + '" height="' + H + '" fill="transparent" id="hit"/></svg>';
+  var svg = $('chart').querySelector('svg'), tip = $('tip');
+  $('hit').addEventListener('mousemove', function (e) {
+    var r = svg.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, i = Math.max(0, Math.min(pts.length - 1, Math.round((x - L) / ((W - L - Rt) / Math.max(1, pts.length - 1)))));
+    var cx = $('cx'); cx.setAttribute('x1', X(i)); cx.setAttribute('x2', X(i)); cx.setAttribute('opacity', '.5');
+    var day = S[i - 1];
+    tip.innerHTML = '<b>' + (pts[i][0] === 'start' || i === 0 ? 'Start' : fd(pts[i][0])) + '</b> · ' + money(pts[i][1]) + (day ? ' <span class="' + cls(day[1]) + '">(' + money(day[1], true) + ' that day)</span>' : '');
+    tip.style.display = 'block'; tip.style.left = (e.pageX + 12) + 'px'; tip.style.top = (e.pageY - 34) + 'px';
+  });
+  $('hit').addEventListener('mouseleave', function () { tip.style.display = 'none'; $('cx').setAttribute('opacity', '0'); });
+}
+
+function record() {
+  var s = R.straight, b = R.best, p = R.props;
+  $('upd').textContent = 'Updated ' + R.updated;
+  $('start').textContent = money(R.start);
+  $('bank').textContent = money(R.bankroll); $('bank').className = 'v ' + cls(R.bankroll - R.start);
+  $('bankS').innerHTML = '<span class="' + cls(s.profit) + '">' + money(s.profit, true) + '</span> since ' + fd(R.first) + ' · ' + rec(s) + ' · ' + s.open + ' open';
+  $('tiles').innerHTML = tile('ROI', pct(s.roi), 'profit ÷ amount bet', cls(s.roi)) + tile('Beat the closing line', plain(s.beat_close), 'of graded bets') +
+    tile('Avg closing-line value', pct(s.avg_clv), 'better than the close', cls(s.avg_clv)) + tile('Avg edge at bet', pct(s.avg_ev), 'vs the fair price');
+  $('best').innerHTML = tile('Record', rec(b), b.open + ' open') + tile('Profit', money(b.profit, true), 'ROI ' + pct(b.roi), cls(b.profit));
+  $('propT').innerHTML = tile('Record', rec(p), p.open + ' open') + tile('Units', (p.units > 0 ? '+' : '') + p.units.toFixed(1) + 'u', 'ROI ' + pct(p.roi), cls(p.units));
+  $('other').innerHTML = R.other.map(function (o) { return '<tr><td>' + esc(o.name) + '</td><td class="n">' + (o.w + o.l + o.p ? rec(o) : '–') + '</td><td class="n">' + o.open + '</td><td class="n">' + (o.staked ? money(o.staked) : '–') + '</td><td class="n ' + cls(o.profit) + '">' + (o.w + o.l + o.p ? money(o.profit, true) : 'not graded yet') + '</td><td class="n ' + cls(o.roi) + '">' + (o.staked ? pct(o.roi) : '–') + '</td></tr>'; }).join('');
+  $('propBy').innerHTML = p.by.map(function (x) { return '<tr><td>' + esc(x.k) + '</td><td class="n">' + x.w + '–' + x.l + '</td><td class="n ' + cls(x.units) + '">' + (x.units > 0 ? '+' : '') + x.units.toFixed(1) + 'u</td><td class="n ' + cls(x.roi) + '">' + pct(x.roi) + '</td></tr>'; }).join('');
+  chart();
+}
+function opts(sel, list) { $(sel).innerHTML = '<option value="">All sports</option>' + list.map(function (s) { return '<option>' + esc(s) + '</option>'; }).join(''); }
+function resCell(r) { var k = r || 'O'; return '<span class="res ' + k + '">' + (r === 'W' ? 'Won' : r === 'L' ? 'Lost' : r === 'P' ? 'Push' : 'Open') + '</span>'; }
+function bets() {
+  var sp = $('fSport').value, rs = $('fRes').value;
+  var L = B.filter(function (x) { return (!sp || x.sp === sp) && (!rs || (rs === 'O' ? !x.r : x.r === rs)); }).slice().reverse();
+  $('betRows').innerHTML = L.slice(0, betN).map(function (x) {
+    return '<tr><td>' + fd(x.d) + '</td><td><b>' + esc(x.pk) + '</b><div class="upd">' + esc(x.sp) + ' · ' + esc(x.m) + '</div></td><td class="hide-sm">' + esc(x.ev) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td class="n">' + money(x.s) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.p) + '">' + (x.r ? money(x.p, true) : '–') + '</td><td class="n hide-sm ' + cls(x.clv) + '">' + pct(x.clv) + '</td></tr>';
+  }).join('') || '<tr><td colspan="10" class="sub">No bets match.</td></tr>';
+  $('betMore').style.display = L.length > betN ? '' : 'none';
+}
+function props() {
+  var sp = $('pSport').value, rs = $('pRes').value, q = $('pQ').value.trim().toLowerCase();
+  var L = P.filter(function (x) { return (!sp || x.sp === sp) && (!rs || (rs === 'O' ? !x.r : x.r === rs)) && (!q || String(x.pl).toLowerCase().indexOf(q) >= 0); }).slice().reverse();
+  $('propRows').innerHTML = L.slice(0, propN).map(function (x) {
+    return '<tr><td>' + fd(x.d) + '</td><td><b>' + esc(x.pl) + '</b><div class="upd">' + esc(x.sp) + ' · ' + esc(x.ev) + '</div></td><td>' + esc(x.pr) + ' ' + esc(x.sd) + ' ' + (x.ln === null ? '' : x.ln) + '</td><td>' + esc(x.bk) + '</td><td class="n">' + odds(x.od) + '</td><td class="n">' + pct(x.e) + '</td><td class="n">' + (x.st === null || x.st === undefined ? '–' : x.st) + '</td><td>' + resCell(x.r) + '</td><td class="n ' + cls(x.u) + '">' + (x.u === null || x.u === undefined ? '–' : (x.u > 0 ? '+' : '') + x.u.toFixed(2)) + '</td></tr>';
+  }).join('') || '<tr><td colspan="9" class="sub">No props match.</td></tr>';
+  $('propMore').style.display = L.length > propN ? '' : 'none';
+}
+$('fSport').onchange = $('fRes').onchange = function () { betN = 60; bets(); };
+$('pSport').onchange = $('pRes').onchange = $('pQ').oninput = function () { propN = 60; props(); };
+$('betMore').onclick = function () { betN += 100; bets(); };
+$('propMore').onclick = function () { propN += 100; props(); };
+function get(f) { return fetch('data/' + f, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(f); return r.json(); }); }
+Promise.all([get('record.json'), get('bets.json'), get('props.json')]).then(function (a) {
+  R = a[0]; B = a[1]; P = a[2];
+  record();
+  opts('fSport', Array.from(new Set(B.map(function (x) { return x.sp; }))).sort()); bets();
+  opts('pSport', Array.from(new Set(P.map(function (x) { return x.sp; }))).sort()); props();
+}).catch(function () { $('upd').textContent = 'Could not load the record. Try refreshing.'; });
+</script>
+</body>
+</html>
