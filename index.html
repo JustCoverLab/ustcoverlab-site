@@ -50,6 +50,9 @@ td.n,th.n{text-align:right}
 .scroll{max-height:560px;overflow:auto;border-radius:10px}
 .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 select,input{font:inherit;font-size:13px;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:5px}
+.seg button{border:0;background:transparent;color:var(--muted);padding:10px 6px;border-radius:8px;font-size:14px}
+.seg button[aria-selected="true"]{background:var(--g);color:#06140b}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .tools{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .tool{display:block;text-decoration:none;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:16px}
@@ -80,22 +83,39 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(
   </nav>
 
   <section id="s-record">
+    <div class="seg" role="tablist" aria-label="Bet type" id="seg">
+      <button type="button" role="tab" data-c="overall">Overall</button><button type="button" role="tab" data-c="props">Props</button><button type="button" role="tab" data-c="aggressive">Aggressive</button><button type="button" role="tab" data-c="best">Best Bets</button>
+    </div>
+    <p class="sub" id="catDef" style="margin:0"></p>
     <div class="card hero">
       <div class="big">
-        <div class="k">Paper bankroll (started at <span id="start"></span>)</div>
+        <div class="k" id="bigK"></div>
         <div class="v" id="bank">–</div>
         <div class="s" id="bankS"></div>
       </div>
       <div class="tiles" id="tiles"></div>
     </div>
     <div class="card">
-      <h2>Running total</h2>
-      <p class="sub">Paper bankroll after each day of graded model bets. Every bet is logged with a timestamp before the game starts.</p>
+      <h2 id="chartH">Running total</h2>
+      <p class="sub" id="chartS"></p>
       <div class="chart" id="chart"></div>
     </div>
-    <div class="grid2">
-      <div class="card"><h2>Best bets</h2><p class="sub">The model's highest-confidence subset of the bets above.</p><div class="tiles" id="best"></div></div>
-      <div class="card"><h2>Player props</h2><p class="sub">Flat 1 unit per prop, real sportsbook prices only.</p><div class="tiles" id="propT"></div></div>
+    <div class="card" id="partsCard">
+      <h2 id="partsH"></h2>
+      <p class="sub" id="partsS"></p>
+      <table><thead id="partsHead"></thead><tbody id="parts"></tbody></table>
+    </div>
+    <div class="card">
+      <h2>How each bet type is defined</h2>
+      <p class="sub">Every bet starts the same way: we take Pinnacle's odds (the sharpest market in the world), strip out their built-in cut to get a fair price, and compare it to the apps people actually bet on. The bet types differ in which edges they take and how much they bet.</p>
+      <div style="display:grid;gap:12px">
+        <div class="note"><h3>Overall</h3><p>Every model bet at standard size, all in one paper bankroll that started at $5,000: straight bets, player props (counted at $50 per unit, which is 1% of the bankroll) and the ratings gap bets. This is the honest "everything" number.</p></div>
+        <div class="note"><h3>Straight bets</h3><p>Spreads, totals and moneylines where an app's price is at least 3% better than the fair price (4% if the bet is placed 8+ hours before the game). Sized with a quarter of the Kelly formula and never more than 3% of the bankroll on one bet. Part of Overall.</p></div>
+        <div class="note"><h3>Props</h3><p>Player props (points, rebounds, assists, threes, receiving yards, catches and so on) at real apps, with the same 3%+ edge rule against Pinnacle's fair price. NFL props are Unders only, because Overs lost money in testing. Graded at a flat 1 unit each so a +150 and a −150 count the same.</p></div>
+        <div class="note y"><h3>Aggressive</h3><p>The same qualifying bets sized bigger, on a separate $5,000 paper bankroll: half Kelly (vs a quarter), up to 5% on one bet, 4% on one game and 30% of the bankroll open at once. It also takes props (quarter Kelly, max 1.5%) and teasers/parlays built only from legs with 3%+ edge. Bigger swings both ways: this is the "what if we pressed" test.</p></div>
+        <div class="note"><h3>Best Bets</h3><p>The highest-quality subset, on its own $5,000 paper bankroll: edge between 2% and 10% (huge edges are often bad data), odds between −250 and +250, no fresh injury news, weather flags or unknown app limits, and at most 5 per day. Same sizing rules as straight bets.</p></div>
+        <div class="note"><h3>Ratings gap bets</h3><p>Side tests of our own power ratings: when our line differs from the market by a set number of points (for example 5+ in college basketball), we log a paper bet. Shown in Overall and in "Everything else we've tried."</p></div>
+      </div>
     </div>
     <div class="card">
       <h2>Everything else we've tried</h2>
@@ -202,50 +222,76 @@ function route() {
 }
 window.addEventListener('hashchange', route); route();
 
-function chart() {
-  var S = R.series; if (!S.length) { $('chart').innerHTML = '<p class="sub">No graded bets yet.</p>'; return; }
-  var pts = [[R.first, R.start]].concat(S.map(function (s) { return [s[0], s[2]]; }));
-  if (pts.length > 1 && pts[0][0] === pts[1][0]) pts[0][0] = 'start';
+var CAT = 'overall';
+var DEF = {
+  overall: 'Every model bet at standard size in one $5,000 paper bankroll: straight bets, props ($50 per unit) and ratings gap bets.',
+  props: 'Player props with a 3%+ edge at real apps, graded at a flat 1 unit each.',
+  aggressive: 'The same edges bet bigger (half Kelly) on a separate $5,000 paper bankroll, plus props and teasers/parlays.',
+  best: 'The cleanest subset (2–10% edge, mid-range odds, no late news, max 5 a day) on its own $5,000 paper bankroll.'
+};
+function amt(v, u, sign) { return u === 'u' ? ((v > 0 && sign ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1) + 'u') : money(v, sign); }
+function chart(c) {
+  var S = c.series, u = c.unit; if (!S.length) { $('chart').innerHTML = '<p class="sub">No graded bets yet.</p>'; return; }
+  var pts = [['start', c.start]].concat(S.map(function (s) { return [s[0], s[2]]; }));
   var W = 900, H = 280, L = 64, Rt = 16, T = 16, Bt = 36;
-  var ys = pts.map(function (p) { return p[1]; }), lo = Math.min.apply(null, ys.concat([R.start])), hi = Math.max.apply(null, ys.concat([R.start]));
-  var pad = (hi - lo) * 0.12 || 100; lo -= pad; hi += pad;
+  var ys = pts.map(function (p) { return p[1]; }), lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys);
+  var pad = (hi - lo) * 0.12 || (u === 'u' ? 2 : 100); lo -= pad; hi += pad;
   var X = function (i) { return L + i * (W - L - Rt) / Math.max(1, pts.length - 1); }, Y = function (v) { return T + (hi - v) / (hi - lo) * (H - T - Bt); };
   var step = Math.pow(10, Math.floor(Math.log10((hi - lo) / 4))), tick = Math.ceil((hi - lo) / 4 / step) * step, g = '';
-  for (var v = Math.ceil(lo / tick) * tick; v <= hi; v += tick) g += '<line x1="' + L + '" x2="' + (W - Rt) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#2b3039"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" fill="#9aa0aa" font-size="12" text-anchor="end">$' + Math.round(v).toLocaleString() + '</text>';
-  g += '<line x1="' + L + '" x2="' + (W - Rt) + '" y1="' + Y(R.start) + '" y2="' + Y(R.start) + '" stroke="#6b7280" stroke-dasharray="4 4"/>';
+  for (var v = Math.ceil(lo / tick) * tick; v <= hi; v += tick) g += '<line x1="' + L + '" x2="' + (W - Rt) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#2b3039"/><text x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" fill="#9aa0aa" font-size="12" text-anchor="end">' + (u === 'u' ? (Math.round(v * 10) / 10) + 'u' : '$' + Math.round(v).toLocaleString()) + '</text>';
+  g += '<line x1="' + L + '" x2="' + (W - Rt) + '" y1="' + Y(c.start) + '" y2="' + Y(c.start) + '" stroke="#6b7280" stroke-dasharray="4 4"/>';
   var every = Math.max(1, Math.ceil(pts.length / 8));
   pts.forEach(function (p, i) { if (i % every === 0 || i === pts.length - 1) g += '<text x="' + X(i) + '" y="' + (H - 12) + '" fill="#9aa0aa" font-size="12" text-anchor="middle">' + (p[0] === 'start' ? 'Start' : fd(p[0])) + '</text>'; });
   var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p[1]).toFixed(1); }).join(' ');
-  var up = pts[pts.length - 1][1] >= R.start, col = up ? '#22c55e' : '#f87171';
-  var area = d + ' L' + X(pts.length - 1) + ' ' + Y(lo) + ' L' + X(0) + ' ' + Y(lo) + ' Z';
-  g += '<path d="' + area + '" fill="' + col + '" opacity=".08"/><path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2.5" stroke-linejoin="round"/>';
+  var col = pts[pts.length - 1][1] >= c.start ? '#22c55e' : '#f87171';
+  g += '<path d="' + d + ' L' + X(pts.length - 1) + ' ' + Y(lo) + ' L' + X(0) + ' ' + Y(lo) + ' Z" fill="' + col + '" opacity=".08"/><path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2.5" stroke-linejoin="round"/>';
   pts.forEach(function (p, i) { g += '<circle cx="' + X(i) + '" cy="' + Y(p[1]) + '" r="4" fill="' + col + '" stroke="#181b21" stroke-width="2"/>'; });
   g += '<line id="cx" y1="' + T + '" y2="' + (H - Bt) + '" stroke="#9aa0aa" stroke-width="1" opacity="0"/>';
-  $('chart').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Paper bankroll over time">' + g + '<rect x="' + L + '" y="0" width="' + (W - L - Rt) + '" height="' + H + '" fill="transparent" id="hit"/></svg>';
+  $('chart').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Running total">' + g + '<rect x="' + L + '" y="0" width="' + (W - L - Rt) + '" height="' + H + '" fill="transparent" id="hit"/></svg>';
   var svg = $('chart').querySelector('svg'), tip = $('tip');
   $('hit').addEventListener('mousemove', function (e) {
     var r = svg.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, i = Math.max(0, Math.min(pts.length - 1, Math.round((x - L) / ((W - L - Rt) / Math.max(1, pts.length - 1)))));
     var cx = $('cx'); cx.setAttribute('x1', X(i)); cx.setAttribute('x2', X(i)); cx.setAttribute('opacity', '.5');
     var day = S[i - 1];
-    tip.innerHTML = '<b>' + (pts[i][0] === 'start' || i === 0 ? 'Start' : fd(pts[i][0])) + '</b> · ' + money(pts[i][1]) + (day ? ' <span class="' + cls(day[1]) + '">(' + money(day[1], true) + ' that day)</span>' : '');
+    tip.innerHTML = '<b>' + (i === 0 ? 'Start' : fd(pts[i][0])) + '</b> · ' + amt(pts[i][1], u) + (day ? ' <span class="' + cls(day[1]) + '">(' + amt(day[1], u, true) + ' that day)</span>' : '');
     tip.style.display = 'block'; tip.style.left = (e.pageX + 12) + 'px'; tip.style.top = (e.pageY - 34) + 'px';
   });
   $('hit').addEventListener('mouseleave', function () { tip.style.display = 'none'; $('cx').setAttribute('opacity', '0'); });
 }
-
+function showCat(k) {
+  CAT = k; var c = R.cats[k], u = c.unit;
+  [].forEach.call($('seg').children, function (b) { b.setAttribute('aria-selected', b.dataset.c === k ? 'true' : 'false'); });
+  $('catDef').textContent = DEF[k];
+  if (u === 'u') { $('bigK').textContent = 'Units won (flat 1 unit per prop)'; $('bank').textContent = amt(c.profit, 'u', true); }
+  else { $('bigK').textContent = 'Paper bankroll (started at ' + money(c.start) + ')'; $('bank').textContent = money(c.now); }
+  $('bank').className = 'v ' + cls(c.profit);
+  $('bankS').innerHTML = '<span class="' + cls(c.profit) + '">' + amt(c.profit, u, true) + '</span> since ' + fd(R.first) + ' · ' + rec(c) + ' · ' + c.open + ' open';
+  $('tiles').innerHTML = tile('ROI', pct(c.roi), u === 'u' ? 'units won ÷ props bet' : 'profit ÷ amount bet', cls(c.roi)) +
+    tile('Amount bet', u === 'u' ? c.staked.toFixed(0) + 'u' : money(c.staked), 'on graded bets') +
+    (c.beat_close !== null && c.beat_close !== undefined ? tile('Beat the closing line', plain(c.beat_close), 'of graded game bets') : tile('Bets graded', String(c.w + c.l + c.p), c.open + ' still open')) +
+    tile('Avg edge at bet', pct(c.avg_ev), 'vs the fair price');
+  $('chartH').textContent = u === 'u' ? 'Running total (units)' : 'Running total';
+  $('chartS').textContent = u === 'u' ? 'Units won after each day of graded props.' : 'Paper bankroll after each day of graded bets. Every bet is logged with a timestamp before the game starts.';
+  chart(c);
+  var head = '<tr><th>Part</th><th class="n">Record</th><th class="n">Open</th><th class="n">Bet</th><th class="n">Profit</th><th class="n">ROI</th></tr>';
+  if (k === 'props') {
+    $('partsH').textContent = 'Props by sport and side'; $('partsS').textContent = 'Flat 1 unit each. NFL props are Unders only since Nov 18.';
+    $('partsHead').innerHTML = '<tr><th>Group</th><th class="n">Record</th><th class="n">Units</th><th class="n">ROI</th></tr>';
+    $('parts').innerHTML = c.by.map(function (x) { return '<tr><td>' + esc(x.k) + '</td><td class="n">' + x.w + '–' + x.l + '</td><td class="n ' + cls(x.units) + '">' + amt(x.units, 'u', true) + '</td><td class="n ' + cls(x.roi) + '">' + pct(x.roi) + '</td></tr>'; }).join('');
+    $('partsCard').style.display = '';
+  } else if (c.parts) {
+    $('partsH').textContent = k === 'overall' ? 'What makes up Overall' : 'What makes up Aggressive'; $('partsS').textContent = 'Each piece, win or lose.';
+    $('partsHead').innerHTML = head;
+    $('parts').innerHTML = c.parts.map(function (x) { var g = x.w + x.l + x.p; return '<tr><td>' + esc(x.k) + '</td><td class="n">' + (g ? rec(x) : '–') + '</td><td class="n">' + x.open + '</td><td class="n">' + (x.staked ? money(x.staked) : '–') + '</td><td class="n ' + cls(x.profit) + '">' + (g ? money(x.profit, true) : '–') + '</td><td class="n ' + cls(x.roi) + '">' + (x.staked ? pct(x.roi) : '–') + '</td></tr>'; }).join('');
+    $('partsCard').style.display = '';
+  } else { $('partsCard').style.display = 'none'; }
+}
 function record() {
-  var s = R.straight, b = R.best, p = R.props;
   $('upd').textContent = 'Updated ' + R.updated;
-  $('start').textContent = money(R.start);
-  $('bank').textContent = money(R.bankroll); $('bank').className = 'v ' + cls(R.bankroll - R.start);
-  $('bankS').innerHTML = '<span class="' + cls(s.profit) + '">' + money(s.profit, true) + '</span> since ' + fd(R.first) + ' · ' + rec(s) + ' · ' + s.open + ' open';
-  $('tiles').innerHTML = tile('ROI', pct(s.roi), 'profit ÷ amount bet', cls(s.roi)) + tile('Beat the closing line', plain(s.beat_close), 'of graded bets') +
-    tile('Avg closing-line value', pct(s.avg_clv), 'better than the close', cls(s.avg_clv)) + tile('Avg edge at bet', pct(s.avg_ev), 'vs the fair price');
-  $('best').innerHTML = tile('Record', rec(b), b.open + ' open') + tile('Profit', money(b.profit, true), 'ROI ' + pct(b.roi), cls(b.profit));
-  $('propT').innerHTML = tile('Record', rec(p), p.open + ' open') + tile('Units', (p.units > 0 ? '+' : '') + p.units.toFixed(1) + 'u', 'ROI ' + pct(p.roi), cls(p.units));
   $('other').innerHTML = R.other.map(function (o) { return '<tr><td>' + esc(o.name) + '</td><td class="n">' + (o.w + o.l + o.p ? rec(o) : '–') + '</td><td class="n">' + o.open + '</td><td class="n">' + (o.staked ? money(o.staked) : '–') + '</td><td class="n ' + cls(o.profit) + '">' + (o.w + o.l + o.p ? money(o.profit, true) : 'not graded yet') + '</td><td class="n ' + cls(o.roi) + '">' + (o.staked ? pct(o.roi) : '–') + '</td></tr>'; }).join('');
-  $('propBy').innerHTML = p.by.map(function (x) { return '<tr><td>' + esc(x.k) + '</td><td class="n">' + x.w + '–' + x.l + '</td><td class="n ' + cls(x.units) + '">' + (x.units > 0 ? '+' : '') + x.units.toFixed(1) + 'u</td><td class="n ' + cls(x.roi) + '">' + pct(x.roi) + '</td></tr>'; }).join('');
-  chart();
+  $('propBy').innerHTML = R.props.by.map(function (x) { return '<tr><td>' + esc(x.k) + '</td><td class="n">' + x.w + '–' + x.l + '</td><td class="n ' + cls(x.units) + '">' + (x.units > 0 ? '+' : '') + x.units.toFixed(1) + 'u</td><td class="n ' + cls(x.roi) + '">' + pct(x.roi) + '</td></tr>'; }).join('');
+  [].forEach.call($('seg').children, function (b) { b.onclick = function () { showCat(b.dataset.c); }; });
+  showCat(CAT);
 }
 function opts(sel, list) { $(sel).innerHTML = '<option value="">All sports</option>' + list.map(function (s) { return '<option>' + esc(s) + '</option>'; }).join(''); }
 function resCell(r) { var k = r || 'O'; return '<span class="res ' + k + '">' + (r === 'W' ? 'Won' : r === 'L' ? 'Lost' : r === 'P' ? 'Push' : 'Open') + '</span>'; }
