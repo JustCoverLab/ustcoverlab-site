@@ -504,8 +504,8 @@ var KG = [['', 'All'], ['INJURY', 'Injuries'], ['GAP ALERT', 'Gap alerts'], ['ED
 function kt(k) { return '<span class="kt k-' + k.split(' ')[0] + '">' + (KN[k] || k).toUpperCase() + '</span>'; }
 function tm(t) { if (!t) return ''; var h = +t.slice(0, 2), m = t.slice(3); return (h % 12 || 12) + ':' + m + (h < 12 ? ' AM' : ' PM'); }
 function feed() {
-  var day = TD, L = FD.filter(function (f) { return f.d === day; });
-  var tl = L.filter(function (f) { return f.k !== 'PROP' || /edge/.test(f.x); }).slice(0, 40);
+  var day = TD, L = FD.filter(function (f) { return f.d === day; }).sort(function (a, b) { return (b.t ? 1 : 0) - (a.t ? 1 : 0) || (b.t > a.t ? 1 : b.t < a.t ? -1 : 0); });
+  var tl = L.filter(function (f) { return f.x.indexOf('props logged this day') < 0; }).slice(0, 40);
   if (!tl.length) tl = [{ k: 'RATINGS', sp: '', x: 'No new data logged for this day yet. The wire fills in as the model runs.', g: '' }];
   $('tRun').innerHTML = tl.map(function (f) { return '<span class="it">' + kt(f.k) + (f.sp ? '<b style="color:var(--muted)">' + esc(f.sp) + '</b>' : '') + '<span>' + (f.g ? '<b style="font-size:13.5px;letter-spacing:0">' + esc(f.g) + '</b> · ' : '') + esc(f.x) + '</span></span>'; }).join('');
   $('tRun').style.setProperty('--dur', Math.max(40, tl.length * 9) + 's');
@@ -513,7 +513,7 @@ function feed() {
   $('tChips').innerHTML = KG.filter(function (k) { return !k[0] || have[k[0]]; }).map(function (k) { return '<button type="button" data-k="' + k[0] + '" aria-pressed="' + (TK === k[0]) + '">' + k[1] + (k[0] ? ' ' + have[k[0]] : ' ' + L.length) + '</button>'; }).join('');
   [].forEach.call($('tChips').children, function (b) { b.onclick = function () { TK = b.dataset.k; feed(); }; });
   var V = L.filter(function (f) { return !TK || f.k === TK; });
-  $('tFeed').innerHTML = V.map(function (f) { return '<div class="row"><div class="tm">' + (tm(f.t) || '–') + '</div><div>' + kt(f.k) + ' <span class="sub" style="font-size:12px">' + esc(f.sp) + '</span></div><div>' + esc(f.x) + (f.g ? '<div class="g">' + esc(f.g) + '</div>' : '') + '</div></div>'; }).join('') || '<p class="sub">Nothing logged for this day yet.</p>';
+  $('tFeed').innerHTML = V.map(function (f) { return '<div class="row"><div class="tm">' + (tm(f.t) || 'Logged') + '</div><div>' + kt(f.k) + ' <span class="sub" style="font-size:12px">' + esc(f.sp) + '</span></div><div>' + esc(f.x) + (f.g ? '<div class="g">' + esc(f.g) + '</div>' : '') + '</div></div>'; }).join('') || '<p class="sub">Nothing logged for this day yet.</p>';
 }
 function tView(v) {
   TV = v; [].forEach.call($('tSeg').children, function (b) { b.setAttribute('aria-selected', b.dataset.v === v ? 'true' : 'false'); });
