@@ -124,6 +124,8 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
 @media (max-width:760px){.ranks{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .tform{display:grid;gap:10px;max-width:640px}
 .tform label{font-size:13px;font-weight:600}
+.tform .fld{display:grid;gap:4px}
+.tform textarea,.tform input,.tform select{width:100%;box-sizing:border-box}
 .tform textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:9px;min-height:84px;resize:vertical}
 .tform .row2{display:flex;flex-wrap:wrap;gap:10px}
 .tform .row2>div{display:grid;gap:4px;flex:1 1 200px}
@@ -290,7 +292,7 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
     <div class="card">
       <h2>Test your theory</h2>
       <form class="tform" id="thForm" onsubmit="return false">
-        <div><label for="thIdea">Your theory</label><textarea id="thIdea" maxlength="240" placeholder="Example: NFL teams coming off a bye cover as road favorites"></textarea></div>
+        <div class="fld"><label for="thIdea">Your theory</label><textarea id="thIdea" maxlength="240" placeholder="Example: NFL teams coming off a bye cover as road favorites"></textarea></div>
         <div class="row2">
           <div><label for="thSport">Sport</label><select id="thSport"><option>NFL</option><option>College football</option><option>NBA</option><option>College basketball</option><option>Other</option></select></div>
           <div><label for="thName">Name or X handle (for credit)</label><input id="thName" maxlength="40" placeholder="@yourhandle"></div>
