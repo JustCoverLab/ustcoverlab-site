@@ -145,8 +145,8 @@ function calc() {
     var L = num($('line').value);
     if (L === null) { show('', 'Enter your spread', 'Our line for this game: ' + disp(t.team) + ' ' + pt(ourLine) + '.', pt(ourLine), '–', '–', '–'); mb(t, o); return; }
     var diff = L - ourLine; p = Phi((m + L) / S.sd);
-    ptsTxt = Math.abs(diff) < 0.25 ? 'Same' : (diff > 0 ? '+' : '−') + Math.abs(Math.round(diff * 2) / 2) + ' pts';
-    ex = diff >= 0.5 ? 'You’re getting ' + Math.abs(Math.round(diff * 2) / 2) + ' points more than our line.' : diff <= -0.5 ? 'You’re giving up ' + Math.abs(Math.round(diff * 2) / 2) + ' points compared to our line.' : 'Your number matches our line.';
+    ptsTxt = Math.abs(diff) < 0.25 ? 'Same' : (diff > 0 ? '+' : '−') + Math.abs(Math.round(diff * 2) / 2) + (Math.abs(Math.round(diff * 2) / 2) === 1 ? ' pt' : ' pts');
+    var ad = Math.abs(Math.round(diff * 2) / 2), pw = ad + (ad === 1 ? ' point' : ' points'); ex = diff >= 0.5 ? 'You’re getting ' + pw + ' more than our line.' : diff <= -0.5 ? 'You’re giving up ' + pw + ' compared to our line.' : 'Your number matches our line.';
   } else {
     p = Phi(m / S.sd);
     ex = 'Our ratings give ' + disp(t.team) + ' about a ' + Math.round(p * 100) + '% chance to win outright.';
