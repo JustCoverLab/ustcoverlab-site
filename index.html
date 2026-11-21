@@ -116,7 +116,7 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
 .rel b{font-size:12px;color:var(--g)}
 .rel ul{margin:4px 0 0;padding-left:18px}
 .rt{font-size:12.5px;margin-top:4px}.rt th,.rt td{padding:5px 8px}
-.tcard{flex:none;width:220px;height:308px;padding:0;border:0;background:none;perspective:1000px;cursor:pointer;border-radius:16px}
+.tcard{flex:none;width:240px;height:336px;padding:0;border:0;background:none;perspective:1000px;cursor:pointer;border-radius:16px}
 .tc-in{position:relative;display:block;width:100%;height:100%;transition:transform .55s;transform-style:preserve-3d}
 .tcard[aria-pressed="true"] .tc-in{transform:rotateY(180deg)}
 .tc-f,.tc-b{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;border:5px solid #F5C518;border-radius:16px;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-sizing:border-box}
@@ -127,8 +127,8 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
 .tc-b{transform:rotateY(180deg);background:#F7F2E1;color:#111814;padding:14px 14px 10px;text-align:left;align-items:stretch}
 .tc-h{font-size:15px;font-weight:800;letter-spacing:1px;color:#14532D}
 .tc-s{font-size:11px;color:#4B5563;margin-bottom:8px}
-.tc-rows{display:grid;gap:0;font-size:13px}
-.tc-rows span{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid #DCD5BF}
+.tc-rows{display:grid;gap:0;font-size:12.5px}
+.tc-rows span{display:flex;justify-content:space-between;gap:8px;white-space:nowrap;padding:4px 0;border-top:1px solid #DCD5BF}
 .tc-rows b{font-variant-numeric:tabular-nums}
 .tc-u{margin-top:auto;font-size:10.5px;color:#4B5563}
 @media (prefers-reduced-motion:reduce){.tc-in{transition:none}}
@@ -518,7 +518,7 @@ function showCat(k) {
   } else { $('partsCard').style.display = 'none'; }
 }
 function record() {
-  $('upd').textContent = 'Updated ' + R.updated;
+  $('upd').textContent = 'Updated ' + R.updated.replace(' · ', ', ');
   $('other').innerHTML = R.other.map(function (o) { return '<tr><td>' + esc(o.name) + '</td><td class="n">' + (o.w + o.l + o.p ? rec(o) : '–') + '</td><td class="n">' + o.open + '</td><td class="n">' + (o.staked ? money(o.staked) : '–') + '</td><td class="n ' + cls(o.profit) + '">' + (o.w + o.l + o.p ? money(o.profit, true) : 'not graded yet') + '</td><td class="n ' + cls(o.roi) + '">' + (o.staked ? pct(o.roi) : '–') + '</td></tr>'; }).join('');
   $('propBy').innerHTML = R.props.by.map(function (x) { return '<tr><td>' + esc(x.k) + '</td><td class="n">' + x.w + '–' + x.l + '</td><td class="n ' + cls(x.units) + '">' + amt(x.units, 'u', true) + '</td><td class="n ' + cls(x.roi) + '">' + pct(x.roi) + '</td></tr>'; }).join('');
   [].forEach.call($('seg').children, function (b) { b.onclick = function () { showCat(b.dataset.c); }; });
@@ -650,7 +650,7 @@ $('ticker').onclick = function () { tView('data'); $('tData').scrollIntoView({ b
 function evieCard() {
   try {
     var o = R.cats.overall, pr = R.cats.props, b = R.best, n = B.length + P.length + (EXo || []).length;
-    var rows = [['Record (W-L-P)', o.w + '-' + o.l + '-' + o.p], ['Profit', money(o.profit, true)], ['Beat the close', R.straight.beat_close != null ? Math.round(R.straight.beat_close * 100) + '%' : '–'], ['Avg edge', pct(o.avg_ev)], ['Props', (pr.profit >= 0 ? '+' : '−') + Math.abs(pr.profit).toFixed(1) + 'u (' + money(pr.profit * UNIT, true) + ')'], ['Best Bets', b.w + '-' + b.l + ' · ' + money(b.profit, true)], ['Bets logged', n.toLocaleString()]];
+    var rows = [['Record', o.w + '-' + o.l + '-' + o.p], ['Profit', money(o.profit, true)], ['Beat the close', R.straight.beat_close != null ? Math.round(R.straight.beat_close * 100) + '%' : '–'], ['Avg edge', pct(o.avg_ev)], ['Props', (pr.profit >= 0 ? '+' : '−') + Math.abs(pr.profit).toFixed(1) + 'u (' + money(pr.profit * UNIT, true) + ')'], ['Best Bets', b.w + '-' + b.l + ' · ' + money(b.profit, true)], ['Bets logged', n.toLocaleString()]];
     $('tcStats').innerHTML = rows.map(function (r) { return '<span>' + esc(r[0]) + '<b>' + esc(r[1]) + '</b></span>'; }).join('');
     $('tcUpd').textContent = 'Updated ' + R.updated;
   } catch (e) { $('tcStats').textContent = 'Stats load with the record.'; }
