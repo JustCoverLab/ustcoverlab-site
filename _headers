@@ -1,2 +1,4 @@
 /data/*
   Cache-Control: no-cache
+/brand/*
+  Access-Control-Allow-Origin: *
