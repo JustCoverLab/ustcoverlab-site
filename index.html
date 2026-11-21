@@ -18,6 +18,7 @@ a{color:var(--g)}
 .wrap{max-width:1040px;margin:0 auto;padding:20px 16px 56px;display:grid;gap:18px}
 header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px}
 .brand{display:flex;align-items:center;gap:12px}
+.logo2{width:44px;height:48px;flex:none}
 .logo{width:44px;height:44px;border:3px solid var(--g);border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px}
 h1{margin:0;font-size:28px;font-weight:800;letter-spacing:-.3px}
 .tag{color:var(--muted);font-size:14px}
@@ -115,6 +116,22 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
 .rel b{font-size:12px;color:var(--g)}
 .rel ul{margin:4px 0 0;padding-left:18px}
 .rt{font-size:12.5px;margin-top:4px}.rt th,.rt td{padding:5px 8px}
+.tcard{flex:none;width:220px;height:308px;padding:0;border:0;background:none;perspective:1000px;cursor:pointer;border-radius:16px}
+.tc-in{position:relative;display:block;width:100%;height:100%;transition:transform .55s;transform-style:preserve-3d}
+.tcard[aria-pressed="true"] .tc-in{transform:rotateY(180deg)}
+.tc-f,.tc-b{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;border:5px solid #F5C518;border-radius:16px;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-sizing:border-box}
+.tc-f{background:#14532D;justify-content:center;gap:4px;padding:12px}
+.tc-nm{font-size:30px;font-weight:800;letter-spacing:3px;color:#fff}
+.tc-sub{font-size:13px;color:#D4E8DB}
+.tc-rk{margin-top:6px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#111814;background:#F5C518;border-radius:999px;padding:3px 10px}
+.tc-b{transform:rotateY(180deg);background:#F7F2E1;color:#111814;padding:14px 14px 10px;text-align:left;align-items:stretch}
+.tc-h{font-size:15px;font-weight:800;letter-spacing:1px;color:#14532D}
+.tc-s{font-size:11px;color:#4B5563;margin-bottom:8px}
+.tc-rows{display:grid;gap:0;font-size:13px}
+.tc-rows span{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid #DCD5BF}
+.tc-rows b{font-variant-numeric:tabular-nums}
+.tc-u{margin-top:auto;font-size:10.5px;color:#4B5563}
+@media (prefers-reduced-motion:reduce){.tc-in{transition:none}}
 .evie{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:14px}
 .evie svg{flex:none}
 .evie>div{flex:1 1 260px}
@@ -135,11 +152,12 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
 .tform .go{background:var(--g);color:#06140b;border-color:var(--g)}
 .tform a.go{display:inline-block;text-decoration:none;font-size:13px;font-weight:600;border:1px solid var(--g);border-radius:8px;padding:7px 14px}
 </style>
+<link rel="icon" href="brand/evie-shield.svg" type="image/svg+xml">
 </head>
 <body>
 <main class="wrap">
   <header>
-    <div class="brand"><div class="logo">JC</div><div><h1>Just Cover Lab</h1><div class="tag"><b>Bet like a sharp. Cheer like a fan.</b> Bet the games you love, without throwing money away.</div></div></div>
+    <div class="brand"><img class="logo2" src="brand/evie-shield.svg" alt="Just Cover Lab shield" width="44" height="48"><div><h1>Just Cover Lab</h1><div class="tag"><b>Bet like a sharp. Cheer like a fan.</b> Bet the games you love, without throwing money away.</div></div></div>
     <div class="upd" id="upd">Loading…</div>
   </header>
   <nav class="tabs" aria-label="Sections">
@@ -285,31 +303,27 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
       <h2>Lab Rats: fans against the books</h2>
       <p class="sub">The books have their models. This one is ours. Send us a betting theory you swear by, like "prime-time home dogs" or "unders in the snow." We test it on years of real results and post the verdict as a Lab Tested episode, with your name on it. If it holds up in both older and recent seasons, it goes into the model.</p>
       <div class="evie">
-        <svg viewBox="0 0 400 440" width="150" height="165" role="img" aria-label="Evie, the Lab Rats mascot, in a varsity shield">
-<path d="M200 16 L366 58 V220 Q366 364 200 426 Q34 364 34 220 V58 Z" fill="#0B0F0D"/>
-<path d="M200 30 L352 68 V220 Q352 352 200 410 Q48 352 48 220 V68 Z" fill="#14532D" stroke="#F5C518" stroke-width="8" stroke-linejoin="round"/>
-<g transform="translate(200 196) scale(0.78) translate(-200 -165)">
-<path d="M108 170 Q104 104 160 88 L200 80 L240 88 Q296 104 292 170 Q290 216 246 240 L200 264 L154 240 Q110 216 108 170 Z" fill="#8E96A0" stroke="#0B0F0D" stroke-width="10" stroke-linejoin="round"/>
-<path d="M92 206 Q80 58 200 52 Q320 58 308 206 L286 214 Q292 150 254 142 Q200 132 146 142 Q108 150 114 214 Z" fill="#1F7A47" stroke="#0B0F0D" stroke-width="10" stroke-linejoin="round"/>
-<path d="M200 58 V136" stroke="#0B0F0D" stroke-width="24"/><path d="M200 58 V136" stroke="#F5C518" stroke-width="12"/>
-<circle cx="104" cy="184" r="9" fill="#0B0F0D"/><circle cx="296" cy="184" r="9" fill="#0B0F0D"/>
-<g transform="rotate(-20 112 60)"><ellipse cx="112" cy="60" rx="24" ry="32" fill="#8E96A0" stroke="#0B0F0D" stroke-width="9"/><ellipse cx="112" cy="62" rx="11" ry="17" fill="#F4A9B8"/></g>
-<g transform="rotate(20 288 60)"><ellipse cx="288" cy="60" rx="24" ry="32" fill="#8E96A0" stroke="#0B0F0D" stroke-width="9"/><ellipse cx="288" cy="62" rx="11" ry="17" fill="#F4A9B8"/></g>
-<path d="M146 150 L192 164" stroke="#0B0F0D" stroke-width="11" stroke-linecap="round"/><path d="M254 150 L208 164" stroke="#0B0F0D" stroke-width="11" stroke-linecap="round"/>
-<ellipse cx="172" cy="178" rx="13" ry="10" fill="#FFFFFF" stroke="#0B0F0D" stroke-width="6"/><ellipse cx="228" cy="178" rx="13" ry="10" fill="#FFFFFF" stroke="#0B0F0D" stroke-width="6"/>
-<circle cx="177" cy="180" r="6" fill="#0B0F0D"/><circle cx="223" cy="180" r="6" fill="#0B0F0D"/>
-<path d="M164 208 Q200 188 236 208 Q240 238 200 252 Q160 238 164 208 Z" fill="#C9CED3" stroke="#0B0F0D" stroke-width="8" stroke-linejoin="round"/>
-<ellipse cx="200" cy="206" rx="15" ry="10" fill="#F4A9B8" stroke="#0B0F0D" stroke-width="6"/>
-<rect x="193" y="232" width="14" height="12" rx="2" fill="#FFFFFF" stroke="#0B0F0D" stroke-width="4"/>
-<g fill="none" stroke-linecap="round"><path d="M114 210 Q200 306 286 210" stroke="#0B0F0D" stroke-width="16"/><path d="M134 222 H266" stroke="#0B0F0D" stroke-width="16"/><path d="M200 222 V256" stroke="#0B0F0D" stroke-width="16"/><path d="M114 210 Q200 306 286 210" stroke="#D9DDD6" stroke-width="7"/><path d="M134 222 H266" stroke="#D9DDD6" stroke-width="7"/><path d="M200 222 V256" stroke="#D9DDD6" stroke-width="7"/></g>
-</g>
-<path d="M14 318 H386 L362 350 L386 382 H14 L38 350 Z" fill="#F5C518" stroke="#0B0F0D" stroke-width="8" stroke-linejoin="round"/>
-<text x="200" y="364" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-weight="700" font-size="40" letter-spacing="6" fill="#0B0F0D">LAB RATS</text>
-</svg>
+        <button type="button" class="tcard" id="tCard" aria-pressed="false" aria-label="Evie's trading card. Tap to flip for live stats.">
+          <span class="tc-in">
+            <span class="tc-f">
+              <img src="brand/evie-shield.svg" alt="" width="150" height="165">
+              <span class="tc-nm">EVIE</span>
+              <span class="tc-sub">Ndudi EV · Mascot</span>
+              <span class="tc-rk">Lab Rats · Rookie 2026</span>
+            </span>
+            <span class="tc-b">
+              <span class="tc-h">EVIE · NDUDI EV</span>
+              <span class="tc-s">Career stats, paper bankroll</span>
+              <span class="tc-rows" id="tcStats">Loading…</span>
+              <span class="tc-u" id="tcUpd"></span>
+            </span>
+          </span>
+        </button>
         <div>
-          <div class="n" style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--y);text-transform:uppercase">Meet the mascot</div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--y);text-transform:uppercase">Meet the mascot</div>
           <h3 style="margin:4px 0 6px;font-size:22px">Evie</h3>
-          <p class="sub" style="margin:0">Full name: Ndudi EV. Drafted 2026. Has never bet a parlay. Goes by Evie, because EV (expected value) is the only thing we bet on. Those who know, know.</p>
+          <p class="sub" style="margin:0 0 8px">Full name: Ndudi EV. Drafted 2026. Has never bet a parlay. Goes by Evie, because EV (expected value) is the only thing we bet on. Those who know, know.</p>
+          <p class="sub" style="margin:0">Tap the card to flip it. The back shows the Lab's live stats, updated every day.</p>
         </div>
       </div>
       <div class="ranks">
@@ -633,10 +647,19 @@ function tView(v) {
 }
 [].forEach.call($('tSeg').children, function (b) { b.onclick = function () { tView(b.dataset.v); }; });
 $('ticker').onclick = function () { tView('data'); $('tData').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+function evieCard() {
+  try {
+    var o = R.cats.overall, pr = R.cats.props, b = R.best, n = B.length + P.length + (EXo || []).length;
+    var rows = [['Record (W-L-P)', o.w + '-' + o.l + '-' + o.p], ['Profit', money(o.profit, true)], ['Beat the close', R.straight.beat_close != null ? Math.round(R.straight.beat_close * 100) + '%' : '–'], ['Avg edge', pct(o.avg_ev)], ['Props', (pr.profit >= 0 ? '+' : '−') + Math.abs(pr.profit).toFixed(1) + 'u (' + money(pr.profit * UNIT, true) + ')'], ['Best Bets', b.w + '-' + b.l + ' · ' + money(b.profit, true)], ['Bets logged', n.toLocaleString()]];
+    $('tcStats').innerHTML = rows.map(function (r) { return '<span>' + esc(r[0]) + '<b>' + esc(r[1]) + '</b></span>'; }).join('');
+    $('tcUpd').textContent = 'Updated ' + R.updated;
+  } catch (e) { $('tcStats').textContent = 'Stats load with the record.'; }
+}
+$('tCard').addEventListener('click', function () { this.setAttribute('aria-pressed', this.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); });
 function get(f) { return fetch('data/' + f, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(f); return r.json(); }); }
 Promise.all([get('record.json'), get('bets.json'), get('props.json'), get('exotics.json').catch(function () { return []; }), get('feed.json').catch(function () { return []; })]).then(function (a) {
   R = a[0]; B = a[1]; P = a[2]; EXo = a[3]; FD = a[4];
-  record(); today(); feed(); howNums();
+  record(); today(); feed(); howNums(); evieCard();
   opts('fSport', Array.from(new Set(B.map(function (x) { return x.sp; }))).sort()); bets();
   opts('pSport', Array.from(new Set(P.map(function (x) { return x.sp; }))).sort()); props();
 }).catch(function () { $('upd').textContent = 'Could not load the record. Try refreshing.'; });
