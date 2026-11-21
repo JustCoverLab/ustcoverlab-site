@@ -132,6 +132,9 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
 .tc-rows b{font-variant-numeric:tabular-nums}
 .tc-u{margin-top:auto;font-size:10.5px;color:#4B5563}
 @media (prefers-reduced-motion:reduce){.tc-in{transition:none}}
+.tipbtn{display:inline-block;background:var(--g);color:#06140b;font-weight:700;text-decoration:none;border-radius:999px;padding:9px 18px}
+.tiplink{color:var(--muted)}
+.tipbtn[hidden],#tipSoon[hidden]{display:none}
 .evie{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:14px}
 .evie svg{flex:none}
 .evie>div{flex:1 1 260px}
@@ -195,11 +198,11 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
     </div>
     <div class="card">
       <h2>How each bet type is defined</h2>
-      <p class="sub">Every bet starts the same way: we take Pinnacle's odds (the sharpest market in the world), strip out their built-in cut to get a fair price, and compare it to the apps people actually bet on. The bet types differ in which edges they take and how much they bet. 1 unit = $50 (1% of the starting bankroll); see <a href="#how" style="color:var(--g)">Units &amp; bankroll management</a>.</p>
+      <p class="sub">Every bet starts the same way: we start from the sharpest betting market's prices, strip out the bookmaker's built-in cut to get a fair price, and compare it to the apps people actually bet on. The bet types differ in which edges they take and how much they bet. 1 unit = $50 (1% of the starting bankroll); see <a href="#how" style="color:var(--g)">Units &amp; bankroll management</a>.</p>
       <div style="display:grid;gap:12px">
         <div class="note"><h3>Overall</h3><p>Every model bet at standard size, all in one paper bankroll that started at $5,000: straight bets, player props (counted at $50 per unit, which is 1% of the bankroll) and the ratings gap bets. This is the honest "everything" number.</p></div>
         <div class="note"><h3>Straight bets</h3><p>Spreads, totals and moneylines where an app's price is at least 3% better than the fair price (4% if the bet is placed 8+ hours before the game). Sized with a quarter of the Kelly formula and never more than 3% of the bankroll on one bet. Part of Overall.</p></div>
-        <div class="note"><h3>Props</h3><p>Player props (points, rebounds, assists, threes, receiving yards, catches and so on) at real apps, with the same 3%+ edge rule against Pinnacle's fair price. NFL props are Unders only, because Overs lost money in testing. Graded at a flat 1 unit ($50) each so a +150 and a −150 count the same.</p></div>
+        <div class="note"><h3>Props</h3><p>Player props (points, rebounds, assists, threes, receiving yards, catches and so on) at real apps, with the same 3%+ edge rule against the sharp market's fair price. NFL props are Unders only, because Overs lost money in testing. Graded at a flat 1 unit ($50) each so a +150 and a −150 count the same.</p></div>
         <div class="note y"><h3>Aggressive</h3><p>The same qualifying bets sized bigger, on a separate $5,000 paper bankroll: half Kelly (vs a quarter), up to 5% on one bet, 4% on one game and 30% of the bankroll open at once. It also takes props (quarter Kelly, max 1.5%) and teasers/parlays built only from legs with 3%+ edge. Bigger swings both ways: this is the "what if we pressed" test.</p></div>
         <div class="note"><h3>Best Bets</h3><p>The highest-quality subset, on its own $5,000 paper bankroll: edge between 2% and 10% (huge edges are often bad data), odds between −250 and +250, no fresh injury news, weather flags or unknown app limits, and at most 5 per day. Same sizing rules as straight bets.</p></div>
         <div class="note"><h3>Ratings gap bets</h3><p>Side tests of our own power ratings: when our line differs from the market by a set number of points (for example 5+ in college basketball), we log a paper bet. Shown in Overall and in "Everything else we've tried."</p></div>
@@ -375,7 +378,7 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
           <div class="ex">How we do it: fun bets come from a fixed $300 a month at about $20 each. No 50-to-1 parlays, no chasing. Every big game gets a pregame card with the best prices and what to watch for.</div></div></div>
         <div class="it"><div class="big">B</div><div><h3>Give yourself a real shot</h3>
           <p>You can't control who wins. You can control the price you get. Bet when an app's price is better than the fair price, not because you have a feeling. Good bets still lose often; good prices win over time.</p>
-          <div class="ex" id="howB">How we do it: we only bet when an app beats Pinnacle's fair price by 3% or more.</div></div></div>
+          <div class="ex" id="howB">How we do it: we only bet when an app beats the sharp market's fair price by 3% or more.</div></div></div>
         <div class="it"><div class="big">C</div><div><h3>Stay in the game</h3>
           <p>Set a bankroll you could lose entirely without it mattering, and keep it separate. Make 1 unit about 1% of it. Small, steady bets survive the cold streaks that wipe out big ones, and every bettor hits cold streaks.</p>
           <div class="ex" id="howC">How we do it: 1 unit = $50 on a $5,000 paper bankroll, a quarter of the Kelly formula, and never more than 3% on one bet.</div></div></div>
@@ -387,7 +390,7 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
     <div class="card">
       <h2>How the model works</h2>
       <ol class="steps">
-        <li><b>Start from the sharpest price.</b> Pinnacle's odds are the best estimate of a game's true chances. We remove their built-in cut to get a fair price.</li>
+        <li><b>Start from the sharpest price.</b> The sharpest betting market is the best estimate of a game's true chances. We remove the built-in cut to get a fair price.</li>
         <li><b>Shop every app.</b> We compare that fair price to the odds at the apps regular people use.</li>
         <li><b>Only bet real edges.</b> A bet qualifies when an app's price is at least 3% better than fair.</li>
         <li><b>Size bets small.</b> Stakes are a quarter of the Kelly formula and never more than 3% of the bankroll on one bet, so no single game can sink us. Details below.</li>
@@ -407,6 +410,16 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
         <div class="note"><h3>If you bet your own money</h3><p>Pick a bankroll you could lose entirely without it mattering, and keep it separate from everything else. Make 1 unit 1–2% of it. Don't raise your unit after a hot week, don't chase after a bad one, and resize at most once a month. A bankroll plan is what makes betting fun for the long haul instead of stressful.</p></div>
       </div>
     </div>
+    <div class="card" id="free">
+      <h2>Keep the Lab free</h2>
+      <p class="sub">Right now everything here is free: every pick, the full record, the tools and Check My Bet. We're early, still testing and building, and we want as many fans in as possible, so there's nothing to buy.</p>
+      <div style="display:grid;gap:12px">
+        <div class="note"><h3>Running it isn't free</h3><p>Pulling live odds all day, paying for pro-grade sports data, and running the models cost money every month. If the Lab has helped you, a tip helps keep it free for everyone. Totally optional, and it never buys picks.</p></div>
+        <div class="note"><h3>Where tips go</h3><p>Live odds data, sports data and stats, model runs and hosting. That's it.</p></div>
+        <div class="note y"><h3>What's coming</h3><p>Down the road we'll add <b>Premium</b> (real-time alerts, best price in your state, alerts for your teams) and <b>Premium+</b> (everything in Premium plus an AI chat built for betting). The picks and the full record will always stay free.</p></div>
+      </div>
+      <p style="margin:14px 0 0"><a id="tipBtn" class="tipbtn" href="#free" hidden>Leave a tip</a><span id="tipSoon" class="sub">The tip jar opens soon.</span></p>
+    </div>
     <div class="card">
       <h2>House rules</h2>
       <ol class="steps">
@@ -418,7 +431,7 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
     </div>
   </section>
 
-  <footer>Just Cover Lab · <a href="https://x.com/JustCoverLab">@JustCoverLab</a> (x.com/JustCoverLab) · Win / Lose / Draw &lt; Cover<br>21+ only. Gambling problem? Call 1-800-GAMBLER. Paper results for entertainment and education, not betting advice.</footer>
+  <footer><a href="#free" class="tiplink">Keep the Lab free</a> · Just Cover Lab · <a href="https://x.com/JustCoverLab">@JustCoverLab</a> (x.com/JustCoverLab) · Win / Lose / Draw &lt; Cover<br>21+ only. Gambling problem? Call 1-800-GAMBLER. Paper results for entertainment and education, not betting advice.</footer>
 </main>
 <div class="tip" id="tip"></div>
 <script>
@@ -436,9 +449,11 @@ function tile(k, v, s, c) { return '<div class="tile"><div class="k">' + k + '</
 
 function route() {
   var h = (location.hash || '#record').slice(1), ok = ['record', 'today', 'bets', 'props', 'lab', 'rats', 'tools', 'how'];
+  var sub = { free: 'how', units: 'how' }[h]; if (sub) h = sub;
   if (ok.indexOf(h) < 0) h = 'record';
   ok.forEach(function (k) { $('s-' + k).classList.toggle('on', k === h); });
   document.querySelectorAll('nav.tabs a').forEach(function (a) { if (a.getAttribute('href') === '#' + h) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  if (sub) { var el = $(location.hash.slice(1)); if (el) setTimeout(function () { el.scrollIntoView(); }, 0); }
 }
 (function () {
   function upd() {
@@ -600,7 +615,7 @@ function howNums() {
   try {
     var st = R.cats.overall.parts[0], n = B.length + P.length + (EXo || []).length;
     var bc = R.straight && R.straight.beat_close;
-    $('howB').textContent = 'How we do it: we only bet when an app beats Pinnacle\'s fair price by 3% or more.' + (bc ? ' So far ' + Math.round(bc * 100) + '% of our straight bets got a better number than the closing line, the best sign an edge is real.' : '');
+    $('howB').textContent = 'How we do it: we only bet when an app beats the sharp market\'s fair price by 3% or more.' + (bc ? ' So far ' + Math.round(bc * 100) + '% of our straight bets got a better number than the closing line, the best sign an edge is real.' : '');
     var worst = null; Object.keys(R.days || {}).forEach(function (d) { var x = R.days[d].straight; if (x && x.w + x.l + x.p && (worst === null || x.profit < worst.p)) worst = { d: d, p: x.profit }; });
     $('howC').textContent = 'How we do it: 1 unit = $50 on a $5,000 paper bankroll, a quarter of the Kelly formula, and never more than 3% on one bet.' + (worst && worst.p < 0 ? ' Our worst straight-bet day so far (' + fd(worst.d) + ') lost ' + money(-worst.p) + ', about ' + Math.round(-worst.p / R.start * 100) + '% of the bankroll. A bad day, not a disaster.' : '');
     $('howD').textContent = 'How we do it: all ' + n.toLocaleString() + ' bets are timestamped before the game and stay on this site, win or lose' + (st ? ', including the ' + st.l + ' straight-bet losses.' : '.');
@@ -620,7 +635,7 @@ function clpTxt(x) {
 function relHtml(f) {
   var h = f.tag ? ' <span class="kt k-GAP">' + esc(f.tag) + '</span>' : '';
   if (f.rel && f.rel.length) {
-    h += '<div class="rel"><b>↳ Bets the model made after the news (' + f.rel.length + ')</b><div class="scroll"><table class="rt"><thead><tr><th>Logged</th><th>Bet</th><th>App</th><th class="n">Our odds</th><th class="n">EV</th><th class="n" title="Pinnacle no-vig price just before the game">Closed at</th><th>Result</th></tr></thead><tbody>' +
+    h += '<div class="rel"><b>↳ Bets the model made after the news (' + f.rel.length + ')</b><div class="scroll"><table class="rt"><thead><tr><th>Logged</th><th>Bet</th><th>App</th><th class="n">Our odds</th><th class="n">EV</th><th class="n" title="The sharp market fair price just before the game">Closed at</th><th>Result</th></tr></thead><tbody>' +
       f.rel.map(function (r) {
         var cl = (r.cl === null || r.cl === undefined) ? (r.k === 'PROP' ? '<span class="sub">not captured</span>' : '–') : odds(r.cl) + (r.od !== null ? (dec(r.od) > dec(r.cl) ? ' <span class="pos">✓ beat it</span>' : ' <span class="neg">✗</span>') : '');
         var res = r.r ? resCell(r.r) + (r.k === 'BET' && r.pf !== null && r.pf !== undefined ? ' <span class="' + cls(r.pf) + '">' + money(r.pf, true) + '</span>' : r.u !== null && r.u !== undefined ? ' <span class="' + cls(r.u) + '">' + ud(r.u, true) + '</span>' : '') : resCell(null);
@@ -648,6 +663,8 @@ function tView(v) {
 }
 [].forEach.call($('tSeg').children, function (b) { b.onclick = function () { tView(b.dataset.v); }; });
 $('ticker').onclick = function () { tView('data'); $('tData').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+var TIP_URL = ''; // set to the Ko-fi page once it exists
+if (TIP_URL) { $('tipBtn').href = TIP_URL; $('tipBtn').target = '_blank'; $('tipBtn').rel = 'noopener'; $('tipBtn').hidden = false; $('tipSoon').hidden = true; }
 function evieCard() {
   try {
     var o = R.cats.overall, pr = R.cats.props, b = R.best, n = B.length + P.length + (EXo || []).length;
