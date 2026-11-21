@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Just Cover Lab</title>
-<meta name="description" content="Bet the games you love, without throwing money away. A public betting model: every pick timestamped, losses included.">
+<meta name="description" content="Bet like a sharp. Cheer like a fan. A free public betting model built by fans, for fans: every pick timestamped, losses included.">
 <meta property="og:title" content="Just Cover Lab">
-<meta property="og:description" content="Bet the games you love, without throwing money away. Every pick timestamped, losses included.">
+<meta property="og:description" content="Bet like a sharp. Cheer like a fan. Every pick timestamped, losses included.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -115,16 +115,30 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
 .rel b{font-size:12px;color:var(--g)}
 .rel ul{margin:4px 0 0;padding-left:18px}
 .rt{font-size:12.5px;margin-top:4px}.rt th,.rt td{padding:5px 8px}
+.ranks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0}
+.ranks div{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:14px}
+.ranks .n{font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--muted);text-transform:uppercase}
+.ranks b{display:block;font-size:17px;margin:4px 0}
+.ranks span{font-size:13.5px;color:var(--muted)}
+.ranks .top{border-color:var(--y)} .ranks .top .n{color:var(--y)}
+@media (max-width:760px){.ranks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tform{display:grid;gap:10px;max-width:640px}
+.tform label{font-size:13px;font-weight:600}
+.tform textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:9px;min-height:84px;resize:vertical}
+.tform .row2{display:flex;flex-wrap:wrap;gap:10px}
+.tform .row2>div{display:grid;gap:4px;flex:1 1 200px}
+.tform .go{background:var(--g);color:#06140b;border-color:var(--g)}
+.tform a.go{display:inline-block;text-decoration:none;font-size:13px;font-weight:600;border:1px solid var(--g);border-radius:8px;padding:7px 14px}
 </style>
 </head>
 <body>
 <main class="wrap">
   <header>
-    <div class="brand"><div class="logo">JC</div><div><h1>Just Cover Lab</h1><div class="tag"><b>Bet the games you love, without throwing money away.</b> Every pick timestamped, losses included.</div></div></div>
+    <div class="brand"><div class="logo">JC</div><div><h1>Just Cover Lab</h1><div class="tag"><b>Bet like a sharp. Cheer like a fan.</b> Bet the games you love, without throwing money away.</div></div></div>
     <div class="upd" id="upd">Loading…</div>
   </header>
   <nav class="tabs" aria-label="Sections">
-    <a href="#record">The Record</a><a href="#today">Today</a><a href="#bets">Every Bet</a><a href="#props">Props</a><a href="#lab">Lab Notes</a><a href="#tools">Tools</a><a href="#how">How It Works</a>
+    <a href="#record">The Record</a><a href="#today">Today</a><a href="#bets">Every Bet</a><a href="#props">Props</a><a href="#lab">Lab Notes</a><a href="#rats">Lab Rats</a><a href="#tools">Tools</a><a href="#how">How It Works</a>
   </nav>
 
   <section id="s-record">
@@ -250,7 +264,7 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
   <section id="s-lab">
     <div class="card">
       <h2>Lab Notes</h2>
-      <p class="sub">Ideas we've tested against real data, whatever the answer was. Got a theory? Pitch it to <a href="https://x.com/JustCoverLab">@JustCoverLab</a> on X (x.com/JustCoverLab) and we'll test it.</p>
+      <p class="sub">Ideas we've tested against real data, whatever the answer was. Got a theory? <a href="#rats">Send it to the Lab Rats</a> and we'll test it.</p>
       <div style="display:grid;gap:12px">
         <div class="note r"><span class="verdict neg">No edge</span><h3>NBA back-to-backs and travel</h3><p>4,138 games. Teams on a back-to-back are about 2 points worse, but the market already prices that in. Betting against tired teams didn't beat the line.</p></div>
         <div class="note"><span class="verdict pos">Edge (so far)</span><h3>Only bet 3%+ edges</h3><p>Bets under 3% EV lost money (−2.4%). Bets at 3% or more returned +15.1%. The model now skips anything under 3%, and needs 4% for bets placed 8+ hours early.</p></div>
@@ -258,6 +272,35 @@ input[type=date]{color-scheme:dark} button:disabled{opacity:.4;cursor:default}
         <div class="note y"><span class="verdict" style="color:var(--y)">Promising, small sample</span><h3>Props when a teammate is newly out</h3><p>NBA player props right after a teammate is ruled out hit 62% (fair odds said 50%), +29.6% ROI. Only 90 props from about 15 games, so it's being tracked, not trusted yet.</p></div>
         <div class="note r"><span class="verdict neg">Cut</span><h3>NFL player prop Overs</h3><p>NFL Overs returned −27% while Unders returned +25%. The model now bets NFL props Unders only.</p></div>
       </div>
+    </div>
+  </section>
+
+  <section id="s-rats">
+    <div class="card">
+      <h2>Lab Rats: fans against the books</h2>
+      <p class="sub">The books have their models. This one is ours. Send us a betting theory you swear by, like "prime-time home dogs" or "unders in the snow." We test it on years of real results and post the verdict as a Lab Tested episode, with your name on it. If it holds up in both older and recent seasons, it goes into the model.</p>
+      <div class="ranks">
+        <div><div class="n">Rank 1</div><b>Lab Rat</b><span>Send your first theory.</span></div>
+        <div><div class="n">Rank 2 · 5 pts</div><b>Lab Assistant</b><span>A few in, at least one good enough to test.</span></div>
+        <div><div class="n">Rank 3 · 15 pts</div><b>Postdoc</b><span>One of your theories made it into the model.</span></div>
+        <div class="top"><div class="n">Top rank · 5 in the model</div><b>White Coat</b><span>Five of your ideas are in the model. We mail you a real white coat.</span></div>
+      </div>
+      <p class="sub" style="margin-top:0">Points: 1 for sending a theory, +2 if it's good enough to test, +10 if it holds up and goes into the model. We check every idea before it touches the picks, so one bad theory can't break anything.</p>
+    </div>
+    <div class="card">
+      <h2>Test your theory</h2>
+      <form class="tform" id="thForm" onsubmit="return false">
+        <div><label for="thIdea">Your theory</label><textarea id="thIdea" maxlength="240" placeholder="Example: NFL teams coming off a bye cover as road favorites"></textarea></div>
+        <div class="row2">
+          <div><label for="thSport">Sport</label><select id="thSport"><option>NFL</option><option>College football</option><option>NBA</option><option>College basketball</option><option>Other</option></select></div>
+          <div><label for="thName">Name or X handle (for credit)</label><input id="thName" maxlength="40" placeholder="@yourhandle"></div>
+        </div>
+        <div class="row2" style="align-items:center"><a class="go" id="thX" href="https://x.com/intent/post" target="_blank" rel="noopener">Post it to @JustCoverLab</a><span class="sub" style="margin:0">Opens a post on X with your theory filled in. Or reply to any of our posts with #LabTested.</span></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Leaderboard</h2>
+      <p class="sub" style="margin:0">No Lab Rats yet. The first theory we test puts its owner at the top.</p>
     </div>
   </section>
 
@@ -344,11 +387,20 @@ function fd(d) { if (!d) return ''; var p = d.split('-'); return Number(p[1]) + 
 function tile(k, v, s, c) { return '<div class="tile"><div class="k">' + k + '</div><div class="v ' + (c || '') + '">' + v + '</div><div class="s">' + (s || '') + '</div></div>'; }
 
 function route() {
-  var h = (location.hash || '#record').slice(1), ok = ['record', 'today', 'bets', 'props', 'lab', 'tools', 'how'];
+  var h = (location.hash || '#record').slice(1), ok = ['record', 'today', 'bets', 'props', 'lab', 'rats', 'tools', 'how'];
   if (ok.indexOf(h) < 0) h = 'record';
   ok.forEach(function (k) { $('s-' + k).classList.toggle('on', k === h); });
   document.querySelectorAll('nav.tabs a').forEach(function (a) { if (a.getAttribute('href') === '#' + h) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
 }
+(function () {
+  function upd() {
+    var t = ($('thIdea').value || '').trim(), sp = $('thSport').value, nm = ($('thName').value || '').trim();
+    var txt = '@JustCoverLab test this one: ' + (t || '[your theory]') + ' (' + sp + ')' + (nm ? ' from ' + nm : '') + ' #LabTested';
+    $('thX').href = 'https://x.com/intent/post?text=' + encodeURIComponent(txt);
+  }
+  ['thIdea', 'thSport', 'thName'].forEach(function (id) { $(id).addEventListener('input', upd); $(id).addEventListener('change', upd); });
+  upd();
+})();
 window.addEventListener('hashchange', route); route();
 
 var CAT = 'overall';
